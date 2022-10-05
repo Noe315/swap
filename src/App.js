@@ -5,6 +5,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Swap from './components/Swap'
 import Liquidity from './components/Liquidity'
 import Header from './components/Header'
+import Position from './components/Position'
 
 function App () {
   return (
@@ -16,6 +17,7 @@ function App () {
           <Route path='/' element={<Swap />} />
           <Route path='/swap' element={<Swap />} />
           <Route path='/provide-liquidity' element={<Liquidity />} />
+          <Route path='/view-liquidity' element={<Position />} />
         </Routes>
       </Router>
     </div>

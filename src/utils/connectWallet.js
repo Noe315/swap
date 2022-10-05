@@ -29,6 +29,16 @@ async function getAccounts() {
   return accounts;
 }
 
+function loadSmartContracts(contracts) {
+  const web3 = getWeb3();
+  const rs = {};
+
+  contracts.forEach(contract => {
+    rs[contract.name] = new web3.eth.Contract(contract.abi, contract.address);
+  });
+  return rs;
+}
+
 async function connectToMetamask() {
   console.log('connect wallet');
   let accounts;
@@ -44,10 +54,12 @@ async function connectToMetamask() {
         method: 'eth_requestAccounts',
       });
       if (accounts) {
-        if (provider.networkVersion !== 0x18) {
+        // if (provider.networkVersion !== '0x18') {
+        if (provider.networkVersion !== '0x61') {
           await provider.request({
             method: 'wallet_switchEthereumChain',
-            params: [{ chainId: 0x18 }], // chainId must be in hexadecimal numbers
+            // params: [{ chainId: '0x18' }], // chainId must be in hexadecimal numbers
+            params: [{ chainId: '0x61' }], // chainId must be in hexadecimal numbers
           });
         }
         return accounts[0];
@@ -64,9 +76,12 @@ async function connectToMetamask() {
             method: 'wallet_addEthereumChain',
             params: [
               {
-                chainId: 0x18,
-                chainName: 'Kardiachain',
-                rpcUrls: ['https://rpc.kardiachain.io'],
+                // chainId: '0x18',
+                // chainName: 'Kardiachain',
+                // rpcUrls: ['https://rpc.kardiachain.io'],
+                chainId: '0x61',
+                chainName: 'Smart Chain - Testnet',
+                rpcUrls: ['https://data-seed-prebsc-1-s1.binance.org:8545/'],
               },
             ],
           });
@@ -81,4 +96,10 @@ async function connectToMetamask() {
   }
 }
 
-export {getWeb3, connectToMetamask, getAccounts, checkSum};
+export {
+  getWeb3,
+  connectToMetamask,
+  getAccounts,
+  checkSum,
+  loadSmartContracts,
+};
