@@ -1,8 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components/macro';
+import Dropdown from 'react-bootstrap/Dropdown';
+import DropdownButton from 'react-bootstrap/DropdownButton';
 import './index.css';
+import { Button } from 'react-bootstrap';
+import SelectToken from './SelectToken';
 
 export default function BoxInput (props) {
+  const [token, setToken] = useState('');
+  const [isSelectToken, setIsSelectToken] = useState();
+  const [tokenAddress, setTokenAddress] = useState();
+
+  const showSelectToken = () => {
+    setIsSelectToken(!isSelectToken);
+  };
   if (props.action === 'swap') {
     return (
       <SwapBoxInputWrapper>
@@ -21,31 +32,49 @@ export default function BoxInput (props) {
               value={props.value}
             />
             <TokenSelect>{props.token}</TokenSelect>
+            {/* <DropdownButton title={token} style={{ marginLeft: 'auto' }}>
+              <Dropdown.Item onClick={() => setToken('KAI')}>KAI</Dropdown.Item>
+              <Dropdown.Item onClick={() => setToken('USDC')}>USDC</Dropdown.Item>
+            </DropdownButton> */}
           </SwapBoxInputArea>
         </SwapBoxInput>
       </SwapBoxInputWrapper>
     );
   } else {
     return (
-      <SwapBoxInputWrapper>
-        <SwapBoxInput>
-          <SwapBoxInputTitle>
-            <div>To</div>
-            <div>Balance</div>
-          </SwapBoxInputTitle>
+      <div>
+        <SelectToken
+          show={isSelectToken}
+          handleClose={() => setIsSelectToken(false)}
+          setToken={setToken}
+          setTokenAddress={setTokenAddress}
+        />
+        <SwapBoxInputWrapper>
+          <SwapBoxInput>
+            <SwapBoxInputTitle>
+              <div>To</div>
+              <div>Balance</div>
+            </SwapBoxInputTitle>
 
-          <SwapBoxInputArea>
-            <Input
-              type='number'
-              placeholder='0.00'
-              onChange={props.onChange}
-              name={props.name}
-              value={props.value}
-            />
-            <TokenSelect>{props.token}</TokenSelect>
-          </SwapBoxInputArea>
-        </SwapBoxInput>
-      </SwapBoxInputWrapper>
+            <SwapBoxInputArea>
+              <Input
+                type='number'
+                placeholder='0.00'
+                onChange={props.onChange}
+                name={props.name}
+                value={props.value}
+              />
+              {/* <TokenSelect>{props.token}</TokenSelect> */}
+              {/* <DropdownButton title={token} style={{ marginLeft: 'auto' }}>
+                <Dropdown.Item onClick={() => setToken('KAI')}>KAI</Dropdown.Item>
+                <Dropdown.Item onClick={() => setToken('USDC')}>USDC</Dropdown.Item>
+              </DropdownButton> */}
+              {/* <Button onClick={props.setIsSelectToken}>{token ? token : 'Select Token'}</Button> */}
+              <Button style={{ marginLeft: 'auto' }} onClick={showSelectToken}>{token ? token : 'Select Token'}</Button>
+            </SwapBoxInputArea>
+          </SwapBoxInput>
+        </SwapBoxInputWrapper>
+      </div>
     );
   }
 }

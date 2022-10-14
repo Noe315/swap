@@ -40,9 +40,8 @@ function loadSmartContracts(contracts) {
 }
 
 async function connectToMetamask() {
-  console.log('connect wallet');
   let accounts;
-  window.ethereum.on('accountsChanged', function () {
+  window.ethereum.on('accountsChanged', function() {
     window.location.reload();
   });
   if (window.ethereum) {
@@ -54,21 +53,22 @@ async function connectToMetamask() {
         method: 'eth_requestAccounts',
       });
       if (accounts) {
-        // if (provider.networkVersion !== '0x18') {
-        if (provider.networkVersion !== '0x61') {
+        if (provider.networkVersion !== '0x18') {
           await provider.request({
             method: 'wallet_switchEthereumChain',
-            // params: [{ chainId: '0x18' }], // chainId must be in hexadecimal numbers
-            params: [{ chainId: '0x61' }], // chainId must be in hexadecimal numbers
+            params: [{ chainId: '0x18' }], // chainId must be in hexadecimal numbers
           });
         }
         return accounts[0];
       }
     } catch (error) {
-      if (error.code === -32002) console.log('already request');
+      if (error.code === -32002)
+        console.log('app.WalletExtension.already_request');
       if (error.code === 4001)
-        if (accounts) console.log('wallet connect failed');
-        else console.log('wallet conenct rejected');
+        if (accounts)
+          console.log('app.WalletExtension.switch_failed');
+        else
+          console.log('app.WalletExtension.rejected');
 
       if (error.code === 4902) {
         try {
@@ -76,25 +76,80 @@ async function connectToMetamask() {
             method: 'wallet_addEthereumChain',
             params: [
               {
-                // chainId: '0x18',
-                // chainName: 'Kardiachain',
-                // rpcUrls: ['https://rpc.kardiachain.io'],
-                chainId: '0x61',
-                chainName: 'Smart Chain - Testnet',
-                rpcUrls: ['https://data-seed-prebsc-1-s1.binance.org:8545/'],
+                chainId: '0x18',
+                chainName: 'KardiaChain Mainnet',
+                rpcUrls: ['https://rpc.kardiachain.io'],
               },
             ],
           });
           return accounts[0];
         } catch (addError) {
-          console.log('có error');
+          console.log('app.WalletExtension.add_failed');
         }
       }
     }
   } else {
-    console.log('please install wallet');
+    console.log('app.WalletExtension.install');
   }
+  return null;
 }
+
+// async function connectToMetamask() {
+//   console.log('connect wallet');
+//   let accounts;
+//   window.ethereum.on('accountsChanged', function () {
+//     window.location.reload();
+//   });
+//   if (window.ethereum) {
+//     const provider = window.ethereum;
+//     try {
+//       // Will open the MetaMask UI
+//       // You should disable this button while the request is pending!
+//       accounts = await provider.request({
+//         method: 'eth_requestAccounts',
+//       });
+//       if (accounts) {
+//         // if (provider.networkVersion !== '0x18') {
+//         if (provider.networkVersion !== '0x61') {
+//           await provider.request({
+//             method: 'wallet_switchEthereumChain',
+//             // params: [{ chainId: '0x18' }], // chainId must be in hexadecimal numbers
+//             params: [{ chainId: '0x61' }], // chainId must be in hexadecimal numbers
+//           });
+//         }
+//         return accounts[0];
+//       }
+//     } catch (error) {
+//       if (error.code === -32002) console.log('already request');
+//       if (error.code === 4001)
+//         if (accounts) console.log('wallet connect failed');
+//         else console.log('wallet conenct rejected');
+
+//       if (error.code === 4902) {
+//         try {
+//           await window.ethereum.request({
+//             method: 'wallet_addEthereumChain',
+//             params: [
+//               {
+//                 // chainId: '0x18',
+//                 // chainName: 'Kardiachain',
+//                 // rpcUrls: ['https://rpc.kardiachain.io'],
+//                 chainId: '0x61',
+//                 chainName: 'Smart Chain - Testnet',
+//                 rpcUrls: ['https://data-seed-prebsc-1-s1.binance.org:8545/'],
+//               },
+//             ],
+//           });
+//           return accounts[0];
+//         } catch (addError) {
+//           console.log('có error');
+//         }
+//       }
+//     }
+//   } else {
+//     console.log('please install wallet');
+//   }
+// }
 
 export {
   getWeb3,

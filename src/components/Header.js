@@ -1,38 +1,52 @@
+// import React, { useEffect, useRef, useState } from 'react'
 import React, { useEffect, useState } from 'react'
 import Navbar from 'react-bootstrap/Navbar'
 import Container from 'react-bootstrap/Container'
 import Nav from 'react-bootstrap/Nav'
 import { Button, NavDropdown } from 'react-bootstrap';
-import { connectToMetamask, getAccounts, loadSmartContracts } from '../utils/connectWallet';
-import { Contracts } from '../constants/address';
+import { connectToMetamask, getAccounts } from '../utils/connectWallet';
 import { shortenAddress } from '../utils/helpers';
 
 export default function Header () {
   const [accountAddress, setAccountAddress] = useState('');
-  const [contracts, setContracts] = useState();
+  // const accountAddress = useRef('');
   const [account, setAccount] = useState();
+  // const account = useRef();
 
-  const getWeb3Data = async () => {
-    const _contracts = loadSmartContracts([...Object.values(Contracts)]);
-    setContracts(_contracts);
-    
+  const getWeb3Data = async () => {    
     await connectToMetamask();
 
     const accounts = await getAccounts();
     setAccount(accounts[0]);
 
-    const _accountAddress = shortenAddress(account);
+    const _accountAddress = account ? shortenAddress(account) : '';
     setAccountAddress(_accountAddress);
   };
 
-  const getPrice = async () => {
-    const price = await contracts.oracle.methods.getLatestPrice().call();
-    console.log('price: ', price);
-  };
+  // const setAddress = async () => {
+  //   const accounts = await getAccounts();
+  //   // setAccount(accounts[0]);
+  //   account.current = accounts[0];
+  //   const _accountAddress = account.current ? shortenAddress(account.current) : '';
+  //   // setAccountAddress(_accountAddress);
+  //   accountAddress.current = _accountAddress;
+  //   console.log('hello');
+  // }
+
+  // const connectWallet = async () => {
+  //   console.log('account: ', account, ' accountAddress: ', accountAddress);
+  //   await connectToMetamask();
+  //   const accounts = await getAccounts();
+  //   setAccount(accounts[0]);
+  //   const _accountAddress = account ? shortenAddress(account) : '';
+  //   setAccountAddress(_accountAddress);
+  //   setAddress();
+  // };
 
   useEffect(() => {
     getWeb3Data();
-  }, []);
+    // setAddress();
+  },[]);
 
   return (
     <Navbar bg="dark" variant="dark">
@@ -46,10 +60,9 @@ export default function Header () {
           </NavDropdown>
         </Nav>
         <Button onClick={() => connectToMetamask()}>
+        {/* <Button onClick={connectWallet}> */}
             {accountAddress === '' ? 'Connect wallet' : accountAddress}
-        </Button>
-        <Button onClick={getPrice}>
-          Test
+            {/* {accountAddress.current === '' ? 'Connect wallet' : accountAddress.current} */}
         </Button>
       </Container>
     </Navbar>
