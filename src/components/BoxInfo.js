@@ -54,13 +54,25 @@ export default function BoxInfo (props) {
           {
             toggleCurrency &&
             <div onClick={() => setToggleCurrency(!toggleCurrency)}>
-                1 USDC = 108.7 KAI ($1)
+                {/* 1 USDC = 108.7 KAI ($1) */}
+                {
+                  props.isPairExist ?
+                  `1 ${props.pair.current.nameTokenIn} = ${props.rate} ${props.pair.current.nameTokenOut}` :
+                  '1 undefined = undefined'
+                }
+                {/* 1 {props.pair.current.nameTokenIn} = {props.rate} {props.pair.current.nameTokenOut} */}
             </div>
           }
           {
             !toggleCurrency &&
             <div onClick={() => setToggleCurrency(!toggleCurrency)}>
-                1 KAI = 0.008188 USDC ($0.00816338)
+                {/* 1 KAI = 0.008188 USDC ($0.00816338) */}
+                {
+                  props.isPairExist ?
+                  `1 ${props.pair.current.nameTokenOut} = ${1 / props.rate} ${props.pair.current.nameTokenIn}` :
+                  '1 undefined = undefined'
+                }
+                {/* 1 {props.pair.current.nameTokenOut} = {1 / props.rate} {props.pair.current.nameTokenIn} */}
             </div>
           }
         </BoxInfoSwapTitle> 

@@ -1,4 +1,5 @@
 import Web3 from "web3/dist/web3.min.js";
+import { Contracts } from "../constants/address";
 
 let eth;
 
@@ -37,6 +38,13 @@ function loadSmartContracts(contracts) {
     rs[contract.name] = new web3.eth.Contract(contract.abi, contract.address);
   });
   return rs;
+}
+
+async function getWeb3Data() {
+  const _contracts = loadSmartContracts([...Object.values(Contracts)]);
+  const addresses = await getAccounts();
+  
+  return {contracts: _contracts, address: addresses[0]};
 }
 
 async function connectToMetamask() {
@@ -153,6 +161,7 @@ async function connectToMetamask() {
 
 export {
   getWeb3,
+  getWeb3Data,
   connectToMetamask,
   getAccounts,
   checkSum,

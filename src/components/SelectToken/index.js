@@ -33,13 +33,25 @@ export default function SelectToken (props) {
     }
   }
 
-  const setToken = (_tokenAddress, _tokenSymbol) => {
+  const setToken = async (_tokenAddress, _tokenSymbol) => {
     props.handleClose();
-    // props.setToken(tokenSymbol ? tokenSymbol : _tokenSymbol);
-    props.setToken(_tokenSymbol);
-    props.setTokenAddress(_tokenAddress);
+    if (props.name === 'inputToken') {
+      props.pair.current = {
+        ...props.pair.current,
+        nameTokenIn: _tokenSymbol,
+        addressTokenIn: _tokenAddress,
+      };
+      props.token.current = props.pair.current.nameTokenIn;
+    } else {
+      props.pair.current = {
+        ...props.pair.current,
+        nameTokenOut: _tokenSymbol,
+        addressTokenOut: _tokenAddress,
+      };
+      props.token.current = props.pair.current.nameTokenOut;
+    }
     setIsInputExist(false);
-    // setTokenAddress();
+    await props.setPair();
   }
 
   return (
@@ -58,7 +70,6 @@ export default function SelectToken (props) {
           // }
           onChange={checkAddress}
         />
-        {/* <div>{tokenSymbol}</div> */}
       </Modal.Body>
       <Modal.Body>
         <TokenList

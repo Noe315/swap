@@ -7,10 +7,9 @@ import { getWeb3, getWeb3Data } from '../utils/connectWallet';
 import { Contracts } from '../constants/address';
 
 export default function BoxInput (props) {
-  const token = useRef();
+  const [token, setToken] = useState();
   const [isSelectToken, setIsSelectToken] = useState();
   const [balance, setBalance] = useState();
-  // const balance = useRef();
   const [web3, setWeb3] = useState();
   const [web3Data, setWeb3Data] = useState();
 
@@ -18,15 +17,16 @@ export default function BoxInput (props) {
     if (web3) {
       let tokenContract;
       if (props.name === 'inputToken') {
-        tokenContract = new web3.eth.Contract(Contracts.erc20.abi, props.pair.current.addressTokenIn);
+        // tokenContract = new web3.eth.Contract(Contracts.erc20.abi, props.pair.addressTokenIn);
+        tokenContract = new web3.eth.Contract(Contracts.erc20.abi, props.addressTokenIn);
       } else {
-        tokenContract = new web3.eth.Contract(Contracts.erc20.abi, props.pair.current.addressTokenOut);
+        // tokenContract = new web3.eth.Contract(Contracts.erc20.abi, props.pair.addressTokenOut);
+        tokenContract = new web3.eth.Contract(Contracts.erc20.abi, props.addressTokenOut);
       }
       let _balance = await tokenContract.methods.balanceOf(web3Data.address).call();
       const decimals = await tokenContract.methods.decimals().call();
       _balance = _balance / (10 ** decimals);
       setBalance(_balance);
-      // balance.current = _balance;
     }
   };
 
@@ -43,14 +43,18 @@ export default function BoxInput (props) {
   }, []);
 
   const setPair = async () => {
+    // console.log('pair: ', props.pair, ' _pair: ', _pair);
+    // props.setPair(_pair);
+    console.log('props.pair: ', props.pair, ' props.token: ', props.token);
+    // console.log('props.token: ', props.token);
+    props.disableButton();
     await getBalance();
-    await props.disableButton();
   }
 
   const showSelectToken = () => {
+    console.log('token: ', token);
     setIsSelectToken(!isSelectToken);
   };
-
   if (props.action === 'swap') {
     return (
       <SwapBoxInputWrapper>
@@ -81,14 +85,15 @@ export default function BoxInput (props) {
           handleClose={() => setIsSelectToken(false)}
           pair={props.pair}
           setPair={setPair}
+          setPairLiquidity={props.setPair}
           token={token}
+          setToken={setToken}
           name={props.name}
         />
         <SwapBoxInputWrapper>
           <SwapBoxInput>
             <SwapBoxInputTitle>
               <div>Balance: {balance ? balance : '0'}</div>
-              {/* <div>Balance: {balance.current ? balance.current : '0'}</div> */}
             </SwapBoxInputTitle>
 
             <SwapBoxInputArea>
@@ -99,16 +104,16 @@ export default function BoxInput (props) {
                 name={props.name}
                 value={props.value}
               />
-              {/* <Button onClick={() => {
+              <Button onClick={() => {
                 console.log('props.token: ', props.token, ' token: ', token);
               }}>
                 Test
-              </Button> */}
+              </Button>
               <Button
                 style={{ marginLeft: 'auto' }}
                 onClick={showSelectToken}
               >
-                {token.current ? token.current : 'Select Token'}
+                {token ? token : 'Select Token'}
               </Button>
             </SwapBoxInputArea>
           </SwapBoxInput>
