@@ -18,8 +18,9 @@ export default function Liquidity () {
   const [inputValue, setInputValue] = useState();
   const [outputValue, setOutputValue] = useState();
   const [disabled, setDisabled] = useState(true);
+  const [isApproved, setIsApproved] = useState();
   const [contracts, setContracts] = useState();
-  const [isPairExist, setIsPairExist] = useState();
+  const [isPairExist, setIsPairExist] = useState(false);
   const pair = useRef({
     nameTokenIn: '',
     nameTokenOut: '',
@@ -31,13 +32,21 @@ export default function Liquidity () {
   // const [pool, setPool] = useState();
   const pool = useRef();
   const [rate, setRate] = useState();
+  const [contractTokenIn, setContractTokenIn] = useState();
+  const [contractTokenOut, setContractTokenOut] = useState();
+  const [poolBalanceTokenIn, setPoolBalanceTokenIn] = useState();
+  const [poolBalanceTokenOut, setPoolBalanceTokenOut] = useState();
   // const rate = useRef();
   const [address, setAddress] = useState();
   const [web3, setWeb3] = useState();
+  const [web3Data, setWeb3Data] = useState();
 
   useEffect(() => {
     const _web3 = getWeb3();
     setWeb3(_web3);
+
+    const _web3Data = getWeb3Data();
+    setWeb3Data(_web3Data);
   }, []);
   // const [isSelectToken, setIsSelectToken] = useState(false);
 
@@ -70,21 +79,32 @@ export default function Liquidity () {
     tokenOut.current = pair.current.nameTokenOut;
   }
 
-  const inputOnChange = (event) => {
+  const inputOnChange = async (event) => {
     const value = event.target.value;
     setAmountADesired(value);
-    // if (isPairExist) {
-    //   if (value) {
-    //     setIsInfo(true);
-    //     // setOutputValue(4);
-    //     setDisabled(false);
-    //   } else {
-    //     setIsInfo(false);
-    //     setOutputValue('');
-    //     setDisabled(true);
-    //   }
-    //   setInputValue();
-    // }
+
+    if (pair.current.addressTokenIn && pair.current.addressTokenOut) {
+      if (isPairExist) {
+        if (value) {
+          const tokenInDecimal = await contractTokenIn.methods.decimals().call();
+          const tokenOutDecimal = await contractTokenOut.methods.decimals().call();
+          
+          const amountInWithDecimal = value * 10 ** tokenInDecimal;
+          const amountInPercentage = amountInWithDecimal / (poolBalanceTokenIn + amountInWithDecimal);
+          
+          const amountOutWithDecimal = (amountInPercentage * poolBalanceTokenOut) / (1 - amountInPercentage);
+          const amountOutWithoutDecimal = amountOutWithDecimal / (10 ** tokenOutDecimal);
+          setIsInfo(true);
+          setOutputValue(amountOutWithoutDecimal);
+          setDisabled(false);
+        } else {
+          setIsInfo(false);
+          setOutputValue('');
+          setDisabled(true);
+        }
+        setInputValue();
+      }
+    }
   };
 
   const outputOnChange = (event) => {
@@ -142,19 +162,35 @@ export default function Liquidity () {
     }
   };
 
+  const checkIsApproved = async () => {
+    const contractTokenIn = new web3.eth.Contract(Contracts.erc20.abi, pair.current.addressTokenIn);
+    const contractTokenOut = new web3.eth.Contract(Contracts.erc20.abi, pair.current.addressTokenOut);
+
+    const approvedAmountTokenIn = await contractTokenIn.methods
+      .allowance(web3Data.address, Contracts.router.address)
+      .call();
+    const approvedAmountTokenOut = await contractTokenOut.methods
+      .allowance(web3Data.address, Contracts.router.address)
+      .call();
+  };
+
   const getRate = async () => {
     if (web3) {
-      const contractTokenIn = new web3.eth.Contract(Contracts.erc20.abi, pair.current.addressTokenIn);
-      const contractTokenOut = new web3.eth.Contract(Contracts.erc20.abi, pair.current.addressTokenOut);
+      const _contractTokenIn = new web3.eth.Contract(Contracts.erc20.abi, pair.current.addressTokenIn);
+      const _contractTokenOut = new web3.eth.Contract(Contracts.erc20.abi, pair.current.addressTokenOut);
+      setContractTokenIn(_contractTokenIn);
+      setContractTokenOut(_contractTokenOut);
 
-      const poolTokenIn = await contractTokenIn.methods.balanceOf(pool.current).call();
-      const poolTokenOut = await contractTokenOut.methods.balanceOf(pool.current).call();
+      const _poolBalanceTokenIn = await _contractTokenIn.methods.balanceOf(pool.current).call();
+      const _poolBalanceTokenOut = await _contractTokenOut.methods.balanceOf(pool.current).call();
+      setPoolBalanceTokenIn(parseInt(_poolBalanceTokenIn));
+      setPoolBalanceTokenOut(parseInt(_poolBalanceTokenOut));
 
-      const tokenInDecimal = await contractTokenIn.methods.decimals().call();
-      const tokenOutDecimal = await contractTokenOut.methods.decimals().call();
+      const tokenInDecimal = await _contractTokenIn.methods.decimals().call();
+      const tokenOutDecimal = await _contractTokenOut.methods.decimals().call();
       
-      const poolBalanceTokenInWithoutDecimal = poolTokenIn / tokenInDecimal;
-      const poolBalanceTokenOutWithoutDecimal = poolTokenOut / tokenOutDecimal;
+      const poolBalanceTokenInWithoutDecimal = _poolBalanceTokenIn / tokenInDecimal;
+      const poolBalanceTokenOutWithoutDecimal = _poolBalanceTokenOut / tokenOutDecimal;
 
       const _rate = poolBalanceTokenInWithoutDecimal / poolBalanceTokenOutWithoutDecimal;
       if (_rate) {
@@ -209,17 +245,24 @@ export default function Liquidity () {
       </Row>
       <Row>
         {
-          isPairExist ?
-            '' :
+          !isPairExist &&
+          pair.current.addressTokenIn &&
+          pair.current.addressTokenOut ?
             <div>
               When creating a pair you are the first liquidity provider. The ratio of tokens you add will set the price of this pool. Once you are happy with the rate, click supply to review
-            </div>
+            </div> :
+            ''
         }
       </Row>
       <Row>
-        <Button>Approve</Button>
+        <Button>Approve Tokens</Button>
         <Button disabled={disabled} onClick={provide}>Provide Liquidity</Button>
         {disabled ? <div>same address</div> : ''}
+      </Row>
+      <Row>
+        <div>
+          Tip: By adding liquidity you will earn 0.25% of all trades on this pair proportional to your share of the pool. Fees are added to the pool, accrue in real time and can be claimed by withdrawing your liquidity.
+        </div>
       </Row>
     </BoxWrapper>
   );
