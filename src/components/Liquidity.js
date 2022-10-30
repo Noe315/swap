@@ -14,10 +14,19 @@ export default function Liquidity () {
   // const [tokenOut, setTokenOut] = useState();
   const tokenIn = useRef();
   const tokenOut = useRef();
+  const [balanceIn, setBalanceIn] = useState();
+  const [balanceOut, setBalanceOut] = useState();
   const [isInfo, setIsInfo] = useState(false);
-  const [inputValue, setInputValue] = useState();
-  const [outputValue, setOutputValue] = useState();
+  // const [inputValue, setInputValue] = useState();
+  // const [outputValue, setOutputValue] = useState();
+  const inputValue = useRef();
+  const outputValue = useRef();
   const [disabled, setDisabled] = useState(true);
+  const [disabledApprove, setDisabledApprove] = useState(true);
+  // const [isInputValid, setIsInputValid] = useState();
+  // const [isOutputValid, setIsOutputValid] = useState();
+  const isInputValid = useRef();
+  const isOutputValid = useRef();
   const [isApproved, setIsApproved] = useState();
   const [contracts, setContracts] = useState();
   const [isPairExist, setIsPairExist] = useState(false);
@@ -32,11 +41,12 @@ export default function Liquidity () {
   // const [pool, setPool] = useState();
   const pool = useRef();
   const [rate, setRate] = useState();
+  // const rate = useRef();
   const [contractTokenIn, setContractTokenIn] = useState();
   const [contractTokenOut, setContractTokenOut] = useState();
   const [poolBalanceTokenIn, setPoolBalanceTokenIn] = useState();
   const [poolBalanceTokenOut, setPoolBalanceTokenOut] = useState();
-  // const rate = useRef();
+  const [shareOfPool, setShareOfPool] = useState(0);
   const [address, setAddress] = useState();
   const [web3, setWeb3] = useState();
   const [web3Data, setWeb3Data] = useState();
@@ -48,6 +58,14 @@ export default function Liquidity () {
     const _web3Data = getWeb3Data();
     setWeb3Data(_web3Data);
   }, []);
+
+  const getWeb3Data = async () => {
+    const _contracts = loadSmartContracts([...Object.values(Contracts)]);
+    setContracts(_contracts);
+
+    const addresses = await getAccounts();
+    setAddress(addresses[0]);
+  };
   // const [isSelectToken, setIsSelectToken] = useState(false);
 
   // const showSelectToken = () => {
@@ -61,17 +79,17 @@ export default function Liquidity () {
       pair.current.nameTokenOut
     )
     {
-      setDisabled(false);
+      // setDisabled(false);
       await checkPairExist();
       await getRate();
       setIsInfo(true);
     }
 
-    if (pair.current.addressTokenIn !== pair.current.addressTokenOut) {
-      setDisabled(false)
-    } else {
-      setDisabled(true);
-    }
+    // if (pair.current.addressTokenIn !== pair.current.addressTokenOut) {
+    //   setDisabled(false)
+    // } else {
+    //   setDisabled(true);
+    // }
     // setTokenIn(pair.current.nameTokenIn);
     // setTokenOut(pair.current.nameTokenOut);
     
@@ -94,54 +112,194 @@ export default function Liquidity () {
           
           const amountOutWithDecimal = (amountInPercentage * poolBalanceTokenOut) / (1 - amountInPercentage);
           const amountOutWithoutDecimal = amountOutWithDecimal / (10 ** tokenOutDecimal);
+          console.log('amountInPercentage * 100: ', amountInPercentage * 100);
+          setShareOfPool(amountInPercentage * 100);
           setIsInfo(true);
-          setOutputValue(amountOutWithoutDecimal);
-          setDisabled(false);
+          // setOutputValue(amountOutWithoutDecimal);
+          inputValue.current = value;
+          outputValue.current = amountOutWithoutDecimal;
+          checkInputAgainstBalance(value);
+          checkOutputAgainstBalance(amountOutWithoutDecimal);
+          // setDisabled(false);
         } else {
           setIsInfo(false);
-          setOutputValue('');
-          setDisabled(true);
+          // setOutputValue('');
+          outputValue.current = '';
+          inputValue.current = '';
+          // setDisabled(true);
         }
-        setInputValue();
+        // setInputValue();
+        // inputValue.current = '';
+      } else {
+        if (value) {
+          // setInputValue(value);
+          inputValue.current = value;
+          getRateWhenPairNotExist();
+          setShareOfPool(100);
+          console.log('value: ', value);
+        } else {
+          inputValue.current = null;
+          setShareOfPool(0);
+          getRateWhenPairNotExist();
+        }
       }
+
+      shouldApproveButtonDisabled();
     }
   };
 
-  const outputOnChange = (event) => {
+  const outputOnChange = async (event) => {
     const value = event.target.value;
     setAmountBDesired(value);
-    // if (isPairExist) {
-    //   if (value) {
-    //     setIsInfo(true);
-    //     // setInputValue(3);
-    //     setDisabled(false);
-    //   } else {
-    //     setIsInfo(false);
-    //     setInputValue('');
-    //     setDisabled(true);
-    //   }
-    //   setOutputValue();
-    // }
+
+    if (pair.current.addressTokenIn && pair.current.addressTokenOut) {
+      if (isPairExist) {
+        if (value) {
+          const tokenOutDecimal = await contractTokenOut.methods.decimals().call();
+          const tokenInDecimal = await contractTokenIn.methods.decimals().call();
+          
+          const amountOutWithDecimal = value * 10 ** tokenOutDecimal;
+          const amountOutPercentage = amountOutWithDecimal / (poolBalanceTokenOut + amountOutWithDecimal);
+          
+          const amountInWithDecimal = (amountOutPercentage * poolBalanceTokenIn) / (1 - amountOutPercentage);
+          const amountInWithoutDecimal = amountInWithDecimal / (10 ** tokenInDecimal);
+          setShareOfPool(amountOutPercentage * 100);
+          setIsInfo(true);
+          // setInputValue(amountInWithoutDecimal);
+          outputValue.current = value;
+          inputValue.current = amountInWithoutDecimal;
+          checkOutputAgainstBalance(value);
+          checkInputAgainstBalance(amountInWithoutDecimal);
+          // setDisabled(false);
+        } else {
+          setIsInfo(false);
+          // setInputValue('');
+          inputValue.current = '';
+          outputValue.current = '';
+          // setDisabled(true);
+        }
+        // setOutputValue();
+        // outputValue.current = '';
+      } else {
+        if (value) {
+          // setOutputValue(value);
+          outputValue.current = value;
+          setShareOfPool(100);
+          getRateWhenPairNotExist();
+          console.log('value: ', value);
+        } else {
+          outputValue.current = null;
+          setShareOfPool(0);
+          getRateWhenPairNotExist();
+        }
+      }
+
+      shouldApproveButtonDisabled();
+    }
   }
 
-  const getWeb3Data = async () => {
-    const _contracts = loadSmartContracts([...Object.values(Contracts)]);
-    setContracts(_contracts);
-
-    const addresses = await getAccounts();
-    setAddress(addresses[0]);
+  const checkInputAgainstBalance = (value) => {
+    if (value > balanceIn) {
+      // setIsInputValid(false);
+      isInputValid.current = false;
+    } else {
+      // setIsInputValid(true);
+      isInputValid.current = true;
+    }
   };
 
+  const checkOutputAgainstBalance = (value) => {
+    if (value > balanceOut) {
+      // setIsOutputValid(false);
+      isOutputValid.current = false;
+    } else {
+      // setIsOutputValid(true);
+      isOutputValid.current = true;
+    }
+  };
+
+  const shouldApproveButtonDisabled = () => {
+    setDisabled(true);
+    if (isInputValid.current && isOutputValid.current) {
+      console.log(
+        'isInputValid.current: ',
+        isInputValid.current,
+        ' isOutputValid.current: ',
+        isOutputValid.current
+      );
+      setDisabledApprove(false);
+    } else {
+      console.log(
+        'isInputValid.current: ',
+        isInputValid.current,
+        ' isOutputValid.current: ',
+        isOutputValid.current
+      );
+      setDisabledApprove(true);
+    }
+  };
+
+  const approveTokens = async () => {
+    const tokenInDecimal = await contractTokenIn.methods.decimals().call();
+    const tokenOutDecimal = await contractTokenOut.methods.decimals().call();
+
+    const amountInRounded = Math.round(inputValue.current * 10 ** tokenInDecimal);
+    const amountOutRounded = Math.round(outputValue.current * 10 ** tokenOutDecimal);
+    
+    const transactionApproveTokenIn = await contractTokenIn.methods
+      .approve(Contracts.router.address, amountInRounded)
+      .send({ from: address});
+    // console.log('transactionApproveTokenIn: ', transactionApproveTokenIn);
+    const transactionApproveTokenOut = await contractTokenOut.methods
+      .approve(Contracts.router.address, amountOutRounded)
+      .send({ from: address});
+
+    if (transactionApproveTokenIn.status && transactionApproveTokenOut.status) {
+      setDisabled(false);
+    } else {
+      setDisabled(true);
+    }
+  }
+
   const provide = async () => {
+    const tokenInDecimal = await contractTokenIn.methods.decimals().call();
+    const tokenOutDecimal = await contractTokenOut.methods.decimals().call();
+
+    const amountInRounded = Math.round(inputValue.current * 10 ** tokenInDecimal);
+    const amountOutRounded = Math.round(outputValue.current * 10 ** tokenOutDecimal);
+
+    const deadline = (Date.parse(new Date()) / 1000) + (60 * 30);
+
+    console.log(
+      'inputValue.current: ',
+      inputValue.current,
+      ' amountInRounded: ',
+      amountInRounded,
+      ' outputValue.current: ',
+      outputValue.current,
+      ' amountOutRounded: ',
+      amountOutRounded,
+      ' amountInRounded * 0.95: ',
+      amountInRounded * 0.95,
+      ' amountOutRounded * 0.95: ',
+      amountOutRounded * 0.95,
+      ' Date.parse(new Date()) / 1000: ',
+      Date.parse(new Date()) / 1000,
+      ' deadline: ',
+      deadline,
+    );
+
     const res = await contracts.router.methods.addLiquidity(
       pair.current.addressTokenIn,
       pair.current.addressTokenOut,
-      amountADesired,
-      amountBDesired,
-      amountADesired * 0.95,
-      amountBDesired * 0.95,
+      // amountADesired,
+      amountInRounded,
+      // amountBDesired,
+      amountOutRounded,
+      amountInRounded * 0.95,
+      amountOutRounded * 0.95,
       address,
-      1666539600
+      deadline
     ).send({ from: address });
     console.log('res: ', res);
   }
@@ -199,9 +357,24 @@ export default function Liquidity () {
     }
   };
 
-  const test = () => {
-    console.log(pair);
-  }
+  const getRateWhenPairNotExist = () => {
+    if (pair.current.addressTokenIn && pair.current.addressTokenOut) {
+      const _rate = inputValue.current / outputValue.current;
+      console.log(
+        '_rate: ',
+        _rate,
+        ' inputValue.current: ',
+        inputValue.current,
+        ' outputValue.current: ',
+        outputValue.current
+      );
+      if (_rate && _rate !== Infinity) {
+        setRate(_rate);
+      } else {
+        setRate();
+      }
+    }
+  };
 
   useEffect(() => {
     getWeb3Data();
@@ -210,7 +383,6 @@ export default function Liquidity () {
   return (
     <BoxWrapper>
       <TableHeader action='provide' />
-      {/* <Button onClick={test}>Test</Button> */}
       <Row>
         <BoxInput
           action='provide'
@@ -220,6 +392,8 @@ export default function Liquidity () {
           token={tokenIn}
           pair={pair}
           disableButton={checkDisableButton}
+          setBalanceIn={setBalanceIn}
+          shouldApproveButtonDisabled={shouldApproveButtonDisabled}
         />
       </Row>
       <Row>
@@ -231,6 +405,8 @@ export default function Liquidity () {
           token={tokenOut}
           pair={pair}
           disableButton={checkDisableButton}
+          setBalanceOut={setBalanceOut}
+          shouldApproveButtonDisabled={shouldApproveButtonDisabled}
         />
       </Row>
       <Row>
@@ -241,6 +417,7 @@ export default function Liquidity () {
           rate={rate}
           pair={pair}
           isPairExist={isPairExist}
+          shareOfPool={shareOfPool}
         />
       </Row>
       <Row>
@@ -255,7 +432,7 @@ export default function Liquidity () {
         }
       </Row>
       <Row>
-        <Button>Approve Tokens</Button>
+        <Button disabled={disabledApprove} onClick={approveTokens}>Approve Tokens</Button>
         <Button disabled={disabled} onClick={provide}>Provide Liquidity</Button>
         {disabled ? <div>same address</div> : ''}
       </Row>

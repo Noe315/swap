@@ -57,8 +57,14 @@ export default function BoxInfo (props) {
                 {/* 1 USDC = 108.7 KAI ($1) */}
                 {
                   props.isPairExist ?
-                  `1 ${props.pair.current.nameTokenIn} = ${props.rate} ${props.pair.current.nameTokenOut}` :
-                  '1 undefined = undefined'
+                  `1 ${props.pair.current.nameTokenIn} =
+                    ${Math.round(props.rate * 10000) / 10000}
+                    ${props.pair.current.nameTokenOut}` :
+                      props.rate ?
+                        `1 ${props.pair.current.nameTokenIn} =
+                          ${Math.round(props.rate * 10000) / 10000}
+                          ${props.pair.current.nameTokenOut}` :
+                            '1 undefined = undefined'
                 }
                 {/* 1 {props.pair.current.nameTokenIn} = {props.rate} {props.pair.current.nameTokenOut} */}
             </div>
@@ -69,8 +75,14 @@ export default function BoxInfo (props) {
                 {/* 1 KAI = 0.008188 USDC ($0.00816338) */}
                 {
                   props.isPairExist ?
-                  `1 ${props.pair.current.nameTokenOut} = ${1 / props.rate} ${props.pair.current.nameTokenIn}` :
-                  '1 undefined = undefined'
+                    `1 ${props.pair.current.nameTokenOut} =
+                      ${Math.round((1 / props.rate) * 10000) / 10000}
+                      ${props.pair.current.nameTokenIn}` :
+                        props.rate ?
+                          `1 ${props.pair.current.nameTokenOut} =
+                            ${Math.round((1 / props.rate) * 10000) / 10000}
+                            ${props.pair.current.nameTokenIn}` :
+                              '1 undefined = undefined'
                 }
                 {/* 1 {props.pair.current.nameTokenOut} = {1 / props.rate} {props.pair.current.nameTokenIn} */}
             </div>
@@ -78,7 +90,7 @@ export default function BoxInfo (props) {
         </BoxInfoSwapTitle> 
         <BoxInfoSwapRow>
           <div>Share of pool</div>
-          <div>{'<'}0.01%</div>
+          <div>{Math.round(props.shareOfPool * 100) / 100}%</div>
         </BoxInfoSwapRow>
       </BoxInfoSwapWrapper>
     );
