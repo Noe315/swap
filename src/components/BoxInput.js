@@ -26,6 +26,12 @@ export default function BoxInput (props) {
       const decimals = await tokenContract.methods.decimals().call();
       _balance = _balance / (10 ** decimals);
       setBalance(_balance);
+
+      if (props.setBalanceIn) {
+        props.setBalanceIn(_balance);
+      } else {
+        props.setBalanceOut(_balance);
+      }
       // balance.current = _balance;
     }
   };
@@ -66,7 +72,8 @@ export default function BoxInput (props) {
               placeholder='0.00'
               onChange={props.onChange}
               name={props.name}
-              value={props.value}
+              // value={props.value}
+              value={props.value ? props.value.current : ''}
             />
             <TokenSelect>{props.token}</TokenSelect>
           </SwapBoxInputArea>
@@ -83,6 +90,7 @@ export default function BoxInput (props) {
           setPair={setPair}
           token={token}
           name={props.name}
+          shouldApproveButtonDisabled={props.shouldApproveButtonDisabled}
         />
         <SwapBoxInputWrapper>
           <SwapBoxInput>
@@ -97,7 +105,8 @@ export default function BoxInput (props) {
                 placeholder='0.00'
                 onChange={props.onChange}
                 name={props.name}
-                value={props.value}
+                // value={props.value}
+                value={props.value.current}
               />
               {/* <Button onClick={() => {
                 console.log('props.token: ', props.token, ' token: ', token);

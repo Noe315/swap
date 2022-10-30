@@ -50,6 +50,7 @@ export default function SelectToken (props) {
       };
       props.token.current = props.pair.current.nameTokenOut;
     }
+    props.shouldApproveButtonDisabled();
     setIsInputExist(false);
     await props.setPair();
   }
