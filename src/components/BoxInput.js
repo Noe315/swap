@@ -53,6 +53,12 @@ export default function BoxInput (props) {
     await props.disableButton();
   }
 
+  // const inputOnChange = (event) => {
+  //   const value = event.target.value;
+  //   console.log('value: ', value, ' props.name: ', props.name);
+  //   props.onChange(value);
+  // }
+
   const showSelectToken = () => {
     setIsSelectToken(!isSelectToken);
   };
@@ -100,14 +106,28 @@ export default function BoxInput (props) {
             </SwapBoxInputTitle>
 
             <SwapBoxInputArea>
-              <Input
-                type='number'
-                placeholder='0.00'
-                onChange={props.onChange}
-                name={props.name}
-                // value={props.value}
-                value={props.value.current}
-              />
+              {
+                props.isPairExist
+                  ? (
+                      <Input
+                        type='number'
+                        placeholder='0.00'
+                        onChange={props.onChange}
+                        // onChange={inputOnChange}
+                        // value={props.value}
+                        disabled={props.name === 'outputToken' ? true : false}
+                        value={props.value.current ? props.value.current : ''}
+                      />
+                    )
+                  : (
+                      <Input
+                        type='number'
+                        placeholder='0.00'
+                        onChange={props.onChange}
+                        // onChange={inputOnChange}
+                      />
+                    )
+              }
               {/* <Button onClick={() => {
                 console.log('props.token: ', props.token, ' token: ', token);
               }}>
