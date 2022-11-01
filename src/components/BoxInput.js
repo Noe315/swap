@@ -105,8 +105,9 @@ export default function BoxInput (props) {
                 placeholder='0.00'
                 onChange={props.onChange}
                 name={props.name}
-                // value={props.value}
-                value={props.value.current}
+                value={props.value}
+                // value={props.value.current}
+                // value={props.inputValueState}
               />
               {/* <Button onClick={() => {
                 console.log('props.token: ', props.token, ' token: ', token);
