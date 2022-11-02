@@ -1,10 +1,10 @@
 import React, { useState } from 'react'
 import styled from 'styled-components/macro';
 import Button from 'react-bootstrap/Button';
-import BoxInput from './BoxInput';
-import BoxInfo from './BoxInfo';
-import BoxWrapper from './BoxWrapper';
-import TableHeader from './TableHeader';
+import BoxInput from '../components/BoxInput';
+import BoxInfo from '../components/BoxInfo';
+import BoxWrapper from '../components/BoxWrapper';
+import TableHeader from '../components/TableHeader';
 
 export default function Swap () {
   const [tokenIn, setTokenIn] = useState('KAI');

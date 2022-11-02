@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
-import styled from 'styled-components/macro';
-import './index.css';
+import {
+  BoxInfoSwap,
+  BoxInfoSwapRow,
+  BoxInfoSwapWrapper,
+  BoxInfoSwapTitle,
+} from './styles';
 
 export default function BoxInfo (props) {
   const [toggle, setToggle] = useState(true);
@@ -54,7 +58,6 @@ export default function BoxInfo (props) {
           {
             toggleCurrency &&
             <div onClick={() => setToggleCurrency(!toggleCurrency)}>
-                {/* 1 USDC = 108.7 KAI ($1) */}
                 {
                   props.isPairExist ?
                   `1 ${props.pair.current.nameTokenIn} =
@@ -66,13 +69,11 @@ export default function BoxInfo (props) {
                           ${props.pair.current.nameTokenOut}` :
                             '1 undefined = undefined'
                 }
-                {/* 1 {props.pair.current.nameTokenIn} = {props.rate} {props.pair.current.nameTokenOut} */}
             </div>
           }
           {
             !toggleCurrency &&
             <div onClick={() => setToggleCurrency(!toggleCurrency)}>
-                {/* 1 KAI = 0.008188 USDC ($0.00816338) */}
                 {
                   props.isPairExist ?
                     `1 ${props.pair.current.nameTokenOut} =
@@ -84,7 +85,6 @@ export default function BoxInfo (props) {
                             ${props.pair.current.nameTokenIn}` :
                               '1 undefined = undefined'
                 }
-                {/* 1 {props.pair.current.nameTokenOut} = {1 / props.rate} {props.pair.current.nameTokenIn} */}
             </div>
           }
         </BoxInfoSwapTitle> 
@@ -96,33 +96,3 @@ export default function BoxInfo (props) {
     );
   }
 }
-
-const BoxInfoSwap = styled.div`
-  display: flex;
-  flex-direction: column;
-  padding-top: 1.5vw;
-`;
-
-const BoxInfoSwapRow = styled.div`
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-`;
-
-const BoxInfoSwapTitle = styled.div`
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-
-  :hover {
-    cursor: pointer;
-  }
-`;
-
-const BoxInfoSwapWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  padding: 1vw;
-  border: 1px solid;
-  border-radius: 15px;
-`;

@@ -2,10 +2,10 @@ import React from 'react'
 import './App.css'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import Swap from './components/Swap'
-import Liquidity from './components/Liquidity'
+import Swap from './pages/Swap'
+import Liquidity from './pages/Liquidity'
 import Header from './components/Header'
-import Position from './components/Position'
+import Position from './pages/Position'
 
 function App () {
   return (

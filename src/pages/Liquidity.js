@@ -1,46 +1,47 @@
 import React, { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components/macro';
 import Button from 'react-bootstrap/Button';
-import BoxInput from './BoxInput';
-import BoxWrapper from './BoxWrapper'
-import TableHeader from './TableHeader';
-import BoxInfo from './BoxInfo';
+import BoxInput from '../components/BoxInput';
+import BoxWrapper from '../components/BoxWrapper'
+import TableHeader from '../components/TableHeader';
+import BoxInfo from '../components/BoxInfo';
 import { getAccounts, getWeb3, loadSmartContracts } from '../utils/connectWallet';
 import { Contracts } from '../constants/address';
 
 export default function Liquidity () {
+  const pool = useRef();
   const tokenIn = useRef();
   const tokenOut = useRef();
-  const [balanceIn, setBalanceIn] = useState();
-  const [balanceOut, setBalanceOut] = useState();
   const inputValue = useRef();
   const outputValue = useRef();
-  const [inputValueState, setInputValueState] = useState();
-  const [outputValueState, setOutputValueState] = useState();
-  const [disabled, setDisabled] = useState(true);
-  const [disabledApprove, setDisabledApprove] = useState(true);
   const isInputValid = useRef();
   const isOutputValid = useRef();
-  const [contracts, setContracts] = useState();
-  const [isPairExist, setIsPairExist] = useState(false);
   const pair = useRef({
     nameTokenIn: '',
     nameTokenOut: '',
     addressTokenIn: '',
     addressTokenOut: '',
   });
+  const [address, setAddress] = useState();
+  const [contracts, setContracts] = useState();
+  const [balanceIn, setBalanceIn] = useState();
+  const [balanceOut, setBalanceOut] = useState();
+  const [inputValueState, setInputValueState] = useState();
+  const [outputValueState, setOutputValueState] = useState();
+  const [disableProvide, setDisableProvide] = useState(true);
+  const [disableApprove, setDisableApprove] = useState(true);
+  const [isPairExist, setIsPairExist] = useState(false);
   const [isAddressSame, setIsAddressSame] = useState(false);
-  const pool = useRef();
   const [rate, setRate] = useState();
   const [contractTokenIn, setContractTokenIn] = useState();
   const [contractTokenOut, setContractTokenOut] = useState();
   const [poolBalanceTokenIn, setPoolBalanceTokenIn] = useState();
   const [poolBalanceTokenOut, setPoolBalanceTokenOut] = useState();
   const [shareOfPool, setShareOfPool] = useState(0);
-  const [address, setAddress] = useState();
   const [web3, setWeb3] = useState();
 
   useEffect(() => {
+    getWeb3Data();
     const _web3 = getWeb3();
     setWeb3(_web3);
   }, []);
@@ -52,21 +53,6 @@ export default function Liquidity () {
     const addresses = await getAccounts();
     setAddress(addresses[0]);
   };
-
-  const checkDisableButton = async () => {
-    if (
-      pair.current.addressTokenIn &&
-      pair.current.addressTokenOut &&
-      pair.current.nameTokenIn &&
-      pair.current.nameTokenOut
-    ) {
-      await checkPairExist();
-      await getRate();
-    }
-    
-    tokenIn.current = pair.current.nameTokenIn;
-    tokenOut.current = pair.current.nameTokenOut;
-  }
 
   const inputOnChange = async (event) => {
     const value = event.target.value;
@@ -83,30 +69,32 @@ export default function Liquidity () {
           
           const amountOutWithDecimal = (amountInPercentage * poolBalanceTokenOut) / (1 - amountInPercentage);
           const amountOutWithoutDecimal = amountOutWithDecimal / (10 ** tokenOutDecimal);
+          // const amountOutWithoutDecimalRounded = Math.round(amountOutWithoutDecimal * tokenOutDecimal) / tokenOutDecimal;
+          const amountOutWithoutDecimalRounded = parseFloat(amountOutWithoutDecimal.toFixed(tokenOutDecimal));
           setShareOfPool(amountInPercentage * 100);
           inputValue.current = value;
-          outputValue.current = amountOutWithoutDecimal;
-          setOutputValueState(amountOutWithoutDecimal);
-          // checkInputAgainstBalance(value);
-          checkOutputAgainstBalance(amountOutWithoutDecimal);
+          // outputValue.current = amountOutWithoutDecimal;
+          // setOutputValueState(amountOutWithoutDecimal);
+          outputValue.current = amountOutWithoutDecimalRounded;
+          setOutputValueState(amountOutWithoutDecimalRounded);
+          // checkOutputAgainstBalance(amountOutWithoutDecimal);
+          checkOutputAgainstBalance(amountOutWithoutDecimalRounded);
         } else {
           outputValue.current = '';
-          setOutputValueState('');
           inputValue.current = '';
+          setOutputValueState('');
         }
       } else {
         if (value) {
           inputValue.current = value;
           getRateWhenPairNotExist();
           setShareOfPool(100);
-          // checkInputAgainstBalance(value);
         } else {
           inputValue.current = null;
           setShareOfPool(0);
           getRateWhenPairNotExist();
         }
       }
-
       shouldApproveButtonDisabled();
     }
     setInputValueState(value);
@@ -127,37 +115,38 @@ export default function Liquidity () {
           
           const amountInWithDecimal = (amountOutPercentage * poolBalanceTokenIn) / (1 - amountOutPercentage);
           const amountInWithoutDecimal = amountInWithDecimal / (10 ** tokenInDecimal);
+          // const amountInWithoutDecimalRounded = Math.round(amountInWithoutDecimal * tokenInDecimal) / tokenInDecimal;
+          const amountInWithoutDecimalRounded = parseFloat(amountInWithoutDecimal.toFixed(tokenInDecimal));
           setShareOfPool(amountOutPercentage * 100);
           outputValue.current = value;
-          inputValue.current = amountInWithoutDecimal;
-          setInputValueState(amountInWithoutDecimal);
-          // checkOutputAgainstBalance(value);
-          checkInputAgainstBalance(amountInWithoutDecimal);
+          // inputValue.current = amountInWithoutDecimal;
+          // setInputValueState(amountInWithoutDecimal);
+          inputValue.current = amountInWithoutDecimalRounded;
+          setInputValueState(amountInWithoutDecimalRounded);
+          // checkInputAgainstBalance(amountInWithoutDecimal);
+          checkInputAgainstBalance(amountInWithoutDecimalRounded);
         } else {
           inputValue.current = '';
-          setInputValueState('');
           outputValue.current = '';
+          setInputValueState('');
         }
       } else {
         if (value) {
           outputValue.current = value;
           setShareOfPool(100);
           getRateWhenPairNotExist();
-          // checkOutputAgainstBalance(value);
         } else {
           outputValue.current = null;
           setShareOfPool(0);
           getRateWhenPairNotExist();
         }
       }
-
       shouldApproveButtonDisabled();
     }
     setOutputValueState(value);
   }
 
   const checkInputAgainstBalance = (value) => {
-    console.log('value: ', value, ' value > balanceIn: ', value > balanceIn);
     if (value > balanceIn) {
       isInputValid.current = false;
     } else {
@@ -166,7 +155,6 @@ export default function Liquidity () {
   };
 
   const checkOutputAgainstBalance = (value) => {
-    console.log('value: ', value, ' value > balanceOut: ', value > balanceOut);
     if (value > balanceOut) {
       isOutputValid.current = false;
     } else {
@@ -175,116 +163,54 @@ export default function Liquidity () {
   };
 
   const shouldApproveButtonDisabled = () => {
-    setDisabled(true);
-    console.log(
-      'isInputValid.current: ',
-      isInputValid.current,
-      ' isOutputValid.current: ',
-      isOutputValid.current,
-      ' pair.current.addressTokenIn: ',
-      pair.current.addressTokenIn,
-      ' pair.current.addressTokenOut: ',
-      pair.current.addressTokenOut,
-      ' inputValue.current: ',
-      inputValue.current,
-      ' inputValue.current === "": ',
-      inputValue.current === "",
-      ' outputValue.current: ',
-      outputValue.current,
-      ' outputValue.current === "": ',
-      outputValue.current === "",
-    );
+    setDisableProvide(true);
+    // console.log(
+    //   'isInputValid.current: ',
+    //   isInputValid.current,
+    //   ' isOutputValid.current: ',
+    //   isOutputValid.current,
+    //   ' pair.current.addressTokenIn: ',
+    //   pair.current.addressTokenIn,
+    //   ' pair.current.addressTokenOut: ',
+    //   pair.current.addressTokenOut,
+    //   ' inputValue.current: ',
+    //   inputValue.current,
+    //   ' inputValue.current === "": ',
+    //   inputValue.current === "",
+    //   ' outputValue.current: ',
+    //   outputValue.current,
+    //   ' outputValue.current === "": ',
+    //   outputValue.current === "",
+    // );
     if (isInputValid.current && isOutputValid.current && inputValue.current && outputValue.current) {
-      console.log(
-        'isInputValid.current: ',
-        isInputValid.current,
-        ' isOutputValid.current: ',
-        isOutputValid.current
-      );
-      setDisabledApprove(false);
+      setDisableApprove(false);
     } else {
-      console.log(
-        'isInputValid.current: ',
-        isInputValid.current,
-        ' isOutputValid.current: ',
-        isOutputValid.current
-      );
-      setDisabledApprove(true);
+      setDisableApprove(true);
     }
     if (pair.current.addressTokenIn === pair.current.addressTokenOut) {
-      setDisabledApprove(true);
+      setDisableApprove(true);
       setIsAddressSame(true);
     } else {
       if (isInputValid.current && isOutputValid.current && inputValue.current && outputValue.current) {
-        setDisabledApprove(false);
+        setDisableApprove(false);
       }
       setIsAddressSame(false);
     }
   };
-
-  const approveTokens = async () => {
-    const tokenInDecimal = await contractTokenIn.methods.decimals().call();
-    const tokenOutDecimal = await contractTokenOut.methods.decimals().call();
-
-    const amountInRounded = Math.round(inputValue.current * 10 ** tokenInDecimal);
-    const amountOutRounded = Math.round(outputValue.current * 10 ** tokenOutDecimal);
-
-    console.log('amountInRounded: ', amountInRounded, ' amountOutRounded: ', amountOutRounded);
-    
-    const transactionApproveTokenIn = await contractTokenIn.methods
-      .approve(Contracts.router.address, amountInRounded)
-      .send({ from: address});
-    // console.log('transactionApproveTokenIn: ', transactionApproveTokenIn);
-    const transactionApproveTokenOut = await contractTokenOut.methods
-      .approve(Contracts.router.address, amountOutRounded)
-      .send({ from: address});
-
-    if (transactionApproveTokenIn.status && transactionApproveTokenOut.status) {
-      setDisabled(false);
-    } else {
-      setDisabled(true);
+  
+  const checkPairAndGetRate = async () => {
+    if (
+      pair.current.addressTokenIn &&
+      pair.current.addressTokenOut &&
+      pair.current.nameTokenIn &&
+      pair.current.nameTokenOut
+    ) {
+      await checkPairExist();
+      await getRate();
     }
-  }
-
-  const provide = async () => {
-    const tokenInDecimal = await contractTokenIn.methods.decimals().call();
-    const tokenOutDecimal = await contractTokenOut.methods.decimals().call();
-
-    const amountInRounded = Math.round(inputValue.current * 10 ** tokenInDecimal);
-    const amountOutRounded = Math.round(outputValue.current * 10 ** tokenOutDecimal);
-
-    const deadline = (Date.parse(new Date()) / 1000) + (60 * 30);
-
-    console.log(
-      'inputValue.current: ',
-      inputValue.current,
-      ' amountInRounded: ',
-      amountInRounded,
-      ' outputValue.current: ',
-      outputValue.current,
-      ' amountOutRounded: ',
-      amountOutRounded,
-      ' amountInRounded * 0.95: ',
-      amountInRounded * 0.95,
-      ' amountOutRounded * 0.95: ',
-      amountOutRounded * 0.95,
-      ' Date.parse(new Date()) / 1000: ',
-      Date.parse(new Date()) / 1000,
-      ' deadline: ',
-      deadline,
-    );
-
-    const res = await contracts.router.methods.addLiquidity(
-      pair.current.addressTokenIn,
-      pair.current.addressTokenOut,
-      amountInRounded,
-      amountOutRounded,
-      amountInRounded * 0.95,
-      amountOutRounded * 0.95,
-      address,
-      deadline
-    ).send({ from: address });
-    console.log('res: ', res);
+    
+    tokenIn.current = pair.current.nameTokenIn;
+    tokenOut.current = pair.current.nameTokenOut;
   }
   
   const checkPairExist = async () => {
@@ -331,14 +257,6 @@ export default function Liquidity () {
   const getRateWhenPairNotExist = () => {
     if (pair.current.addressTokenIn && pair.current.addressTokenOut) {
       const _rate = inputValue.current / outputValue.current;
-      // console.log(
-      //   '_rate: ',
-      //   _rate,
-      //   ' inputValue.current: ',
-      //   inputValue.current,
-      //   ' outputValue.current: ',
-      //   outputValue.current
-      // );
       if (_rate && _rate !== Infinity) {
         setRate(_rate);
       } else {
@@ -349,9 +267,68 @@ export default function Liquidity () {
     }
   };
 
-  useEffect(() => {
-    getWeb3Data();
-  },[]);
+  const approveTokens = async () => {
+    const tokenInDecimal = await contractTokenIn.methods.decimals().call();
+    const tokenOutDecimal = await contractTokenOut.methods.decimals().call();
+
+    const amountInRounded = Math.round(inputValue.current * 10 ** tokenInDecimal);
+    const amountOutRounded = Math.round(outputValue.current * 10 ** tokenOutDecimal);
+
+    console.log('amountInRounded: ', amountInRounded, ' amountOutRounded: ', amountOutRounded);
+    
+    const transactionApproveTokenIn = await contractTokenIn.methods
+      .approve(Contracts.router.address, amountInRounded)
+      .send({ from: address});
+    const transactionApproveTokenOut = await contractTokenOut.methods
+      .approve(Contracts.router.address, amountOutRounded)
+      .send({ from: address});
+
+    if (transactionApproveTokenIn.status && transactionApproveTokenOut.status) {
+      setDisableProvide(false);
+    } else {
+      setDisableProvide(true);
+    }
+  }
+
+  const provide = async () => {
+    const tokenInDecimal = await contractTokenIn.methods.decimals().call();
+    const tokenOutDecimal = await contractTokenOut.methods.decimals().call();
+
+    const amountInRounded = Math.round(inputValue.current * 10 ** tokenInDecimal);
+    const amountOutRounded = Math.round(outputValue.current * 10 ** tokenOutDecimal);
+
+    const deadline = (Date.parse(new Date()) / 1000) + (60 * 30);
+
+    // console.log(
+    //   'inputValue.current: ',
+    //   inputValue.current,
+    //   ' amountInRounded: ',
+    //   amountInRounded,
+    //   ' outputValue.current: ',
+    //   outputValue.current,
+    //   ' amountOutRounded: ',
+    //   amountOutRounded,
+    //   ' amountInRounded * 0.95: ',
+    //   amountInRounded * 0.95,
+    //   ' amountOutRounded * 0.95: ',
+    //   amountOutRounded * 0.95,
+    //   ' Date.parse(new Date()) / 1000: ',
+    //   Date.parse(new Date()) / 1000,
+    //   ' deadline: ',
+    //   deadline,
+    // );
+
+    await contracts.router.methods.addLiquidity(
+      pair.current.addressTokenIn,
+      pair.current.addressTokenOut,
+      amountInRounded,
+      amountOutRounded,
+      amountInRounded * 0.95,
+      amountOutRounded * 0.95,
+      address,
+      deadline
+    ).send({ from: address });
+  }
 
   return (
     <BoxWrapper>
@@ -367,7 +344,7 @@ export default function Liquidity () {
           token={tokenIn}
           pair={pair}
           isPairExist={isPairExist}
-          disableButton={checkDisableButton}
+          checkPairAndGetRate={checkPairAndGetRate}
           setBalanceIn={setBalanceIn}
           shouldApproveButtonDisabled={shouldApproveButtonDisabled}
         />
@@ -383,7 +360,7 @@ export default function Liquidity () {
           token={tokenOut}
           pair={pair}
           isPairExist={isPairExist}
-          disableButton={checkDisableButton}
+          checkPairAndGetRate={checkPairAndGetRate}
           setBalanceOut={setBalanceOut}
           shouldApproveButtonDisabled={shouldApproveButtonDisabled}
         />
@@ -412,8 +389,8 @@ export default function Liquidity () {
         }
       </Row>
       <Row>
-        <Button disabled={disabledApprove} onClick={approveTokens}>Approve Tokens</Button>
-        <Button disabled={disabled} onClick={provide}>Provide Liquidity</Button>
+        <Button disabled={disableApprove} onClick={approveTokens}>Approve Tokens</Button>
+        <Button disabled={disableProvide} onClick={provide}>Provide Liquidity</Button>
         {isAddressSame
           ? <div style={{ color: 'red' }}>
               Addresses of input token and output token are the same,
