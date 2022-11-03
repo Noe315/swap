@@ -1,6 +1,6 @@
 import React from 'react'
-import BoxWrapper from './BoxWrapper';
-import TableHeader from './TableHeader';
+import BoxWrapper from '../components/BoxWrapper';
+import TableHeader from '../components/TableHeader';
 import styled from 'styled-components/macro';
 import { Button } from 'react-bootstrap';
 

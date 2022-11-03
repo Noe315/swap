@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import styled from 'styled-components/macro';
-// import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import { Contracts } from '../../constants/address';
 import { getWeb3 } from '../../utils/connectWallet';
 import TokenList from './TokenList';
+import { Invalid, InputAddress } from '../styles';
 
 export default function SelectToken (props) {
   const web3 = getWeb3();
@@ -62,13 +61,8 @@ export default function SelectToken (props) {
       </Modal.Header>
       <Modal.Body>
         <Invalid>{isAddressValid ? '' : 'Invalid ERC-20 Token address, please only use Copy and Paste for addresses.'}</Invalid>
-        <Input
+        <InputAddress
           placeholder='Enter Token address'
-          // placeholder={
-          //   tokenSymbol ?
-          //   tokenAddress :
-          //   "Enter Token address"
-          // }
           onChange={checkAddress}
         />
       </Modal.Body>
@@ -83,13 +77,3 @@ export default function SelectToken (props) {
     </Modal>
   );
 }
-
-const Input = styled.input`
-  width: 100%;
-  border-radius: 9px;
-`;
-
-const Invalid = styled.div`
-  color: red;
-  padding-bottom: 1vw;
-`;
