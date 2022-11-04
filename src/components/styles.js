@@ -92,3 +92,8 @@ export const InputAddress = styled.input`
   width: 100%;
   border-radius: 9px;
 `;
+
+// Components for TableHeader.js
+export const Warning = styled.div`
+  color: #ff8405;
+`
