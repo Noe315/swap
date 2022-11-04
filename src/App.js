@@ -3,7 +3,7 @@ import './App.css'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Swap from './pages/Swap'
-import Liquidity from './pages/Liquidity'
+import Liquidity from './pages/Liquidity/index'
 import Header from './components/Header'
 import Position from './pages/Position'
 

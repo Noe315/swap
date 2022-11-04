@@ -1,12 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components/macro';
 import Button from 'react-bootstrap/Button';
-import BoxInput from '../components/BoxInput';
-import BoxWrapper from '../components/BoxWrapper'
-import TableHeader from '../components/TableHeader';
-import BoxInfo from '../components/BoxInfo';
-import { getAccounts, getWeb3, loadSmartContracts } from '../utils/connectWallet';
-import { Contracts } from '../constants/address';
+import BoxInput from './components/BoxInput';
+import BoxWrapper from '../../components/BoxWrapper'
+import BoxInfo from './components/BoxInfo';
+import { getAccounts, getWeb3, loadSmartContracts } from '../../utils/connectWallet';
+import { Contracts } from '../../constants/address';
+import TableHeader from './components/TableHeader';
 
 export default function Liquidity () {
   const pool = useRef();
@@ -39,6 +39,7 @@ export default function Liquidity () {
   const [poolBalanceTokenOut, setPoolBalanceTokenOut] = useState();
   const [shareOfPool, setShareOfPool] = useState(0);
   const [web3, setWeb3] = useState();
+  const [slippage, setSlippage] = useState();
 
   useEffect(() => {
     getWeb3Data();
@@ -323,8 +324,8 @@ export default function Liquidity () {
       pair.current.addressTokenOut,
       amountInRounded,
       amountOutRounded,
-      amountInRounded * 0.95,
-      amountOutRounded * 0.95,
+      amountInRounded * (1 - slippage),
+      amountOutRounded * (1 - slippage),
       address,
       deadline
     ).send({ from: address });
@@ -332,10 +333,9 @@ export default function Liquidity () {
 
   return (
     <BoxWrapper>
-      <TableHeader action='provide' />
+      <TableHeader setSlippage={setSlippage} />
       <Row>
         <BoxInput
-          action='provide'
           value={inputValueState}
           // value={inputValue}
           // inputValueState={inputValueState}
@@ -351,7 +351,6 @@ export default function Liquidity () {
       </Row>
       <Row>
         <BoxInput
-          action='provide'
           value={outputValueState}
           // value={outputValue}
           // outputValueState={outputValueState}
@@ -367,7 +366,6 @@ export default function Liquidity () {
       </Row>
       <Row>
         <BoxInfo
-          action='provide'
           isInfo="true"
           rate={rate}
           pair={pair}
