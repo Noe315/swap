@@ -5,7 +5,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Swap from './pages/Swap'
 import Liquidity from './pages/Liquidity/index'
 import Header from './components/Header'
-import Position from './pages/Position'
+import Position from './pages/Position/index'
 
 function App () {
   return (
