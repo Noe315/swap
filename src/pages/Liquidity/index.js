@@ -248,7 +248,8 @@ export default function Liquidity () {
       const poolBalanceTokenInWithoutDecimal = _poolBalanceTokenIn / tokenInDecimal;
       const poolBalanceTokenOutWithoutDecimal = _poolBalanceTokenOut / tokenOutDecimal;
 
-      const _rate = poolBalanceTokenInWithoutDecimal / poolBalanceTokenOutWithoutDecimal;
+      // const _rate = poolBalanceTokenInWithoutDecimal / poolBalanceTokenOutWithoutDecimal;
+      const _rate = poolBalanceTokenOutWithoutDecimal / poolBalanceTokenInWithoutDecimal;
       if (_rate) {
         setRate(_rate);
       }
@@ -269,19 +270,25 @@ export default function Liquidity () {
   };
 
   const approveTokens = async () => {
+    const BN = web3.utils.BN;
     const tokenInDecimal = await contractTokenIn.methods.decimals().call();
     const tokenOutDecimal = await contractTokenOut.methods.decimals().call();
 
-    const amountInRounded = Math.round(inputValue.current * 10 ** tokenInDecimal);
-    const amountOutRounded = Math.round(outputValue.current * 10 ** tokenOutDecimal);
+    // const amountInRounded = Math.round(inputValue.current * 10 ** tokenInDecimal);
+    // const amountOutRounded = Math.round(outputValue.current * 10 ** tokenOutDecimal);
+    const amountInBN = new BN(inputValue.current).mul(new BN(10).pow(new BN(tokenInDecimal)));
+    const amountOutBN = new BN(outputValue.current).mul(new BN(10).pow(new BN(tokenOutDecimal)));
 
-    console.log('amountInRounded: ', amountInRounded, ' amountOutRounded: ', amountOutRounded);
+    // console.log('amountInRounded: ', amountInRounded, ' amountOutRounded: ', amountOutRounded);
+    console.log('amountInBN: ', amountInBN.toString(), ' amountOutBN: ', amountOutBN.toString());
     
     const transactionApproveTokenIn = await contractTokenIn.methods
-      .approve(Contracts.router.address, amountInRounded)
+      // .approve(Contracts.router.address, amountInRounded)
+      .approve(Contracts.router.address, amountInBN)
       .send({ from: address});
     const transactionApproveTokenOut = await contractTokenOut.methods
-      .approve(Contracts.router.address, amountOutRounded)
+      // .approve(Contracts.router.address, amountOutRounded)
+      .approve(Contracts.router.address, amountOutBN)
       .send({ from: address});
 
     if (transactionApproveTokenIn.status && transactionApproveTokenOut.status) {
@@ -292,40 +299,47 @@ export default function Liquidity () {
   }
 
   const provide = async () => {
+    const BN = web3.utils.BN;
     const tokenInDecimal = await contractTokenIn.methods.decimals().call();
     const tokenOutDecimal = await contractTokenOut.methods.decimals().call();
 
-    const amountInRounded = Math.round(inputValue.current * 10 ** tokenInDecimal);
-    const amountOutRounded = Math.round(outputValue.current * 10 ** tokenOutDecimal);
+    // const amountInRounded = Math.round(inputValue.current * 10 ** tokenInDecimal);
+    // const amountOutRounded = Math.round(outputValue.current * 10 ** tokenOutDecimal);
+    const amountInBN = new BN(inputValue.current).mul(new BN(10).pow(new BN(tokenInDecimal)));
+    const amountOutBN = new BN(outputValue.current).mul(new BN(10).pow(new BN(tokenOutDecimal)));
+    const amountInMinBN = amountInBN.mul(new BN(10000).sub(new BN(slippage * 10000))).div(new BN(10000));
+    const amountOutMinBN = amountOutBN.mul(new BN(10000).sub(new BN(slippage * 10000))).div(new BN(10000));
 
     const deadline = (Date.parse(new Date()) / 1000) + (60 * 30);
 
-    // console.log(
-    //   'inputValue.current: ',
-    //   inputValue.current,
-    //   ' amountInRounded: ',
-    //   amountInRounded,
-    //   ' outputValue.current: ',
-    //   outputValue.current,
-    //   ' amountOutRounded: ',
-    //   amountOutRounded,
-    //   ' amountInRounded * 0.95: ',
-    //   amountInRounded * 0.95,
-    //   ' amountOutRounded * 0.95: ',
-    //   amountOutRounded * 0.95,
-    //   ' Date.parse(new Date()) / 1000: ',
-    //   Date.parse(new Date()) / 1000,
-    //   ' deadline: ',
-    //   deadline,
-    // );
+    console.log(
+      'amountInBN: ',
+      amountInBN.toString(),
+      ' amountOutBN: ',
+      amountOutBN.toString(),
+      ' amountInMinBN: ',
+      amountInMinBN.toString(),
+      ' amountOutMinBN: ',
+      amountOutMinBN.toString(),
+      ' deadline: ',
+      deadline,
+      ' slippage: ',
+      slippage,
+      ' slippage * 10000: ',
+      slippage * 10000,
+    );
 
     await contracts.router.methods.addLiquidity(
       pair.current.addressTokenIn,
       pair.current.addressTokenOut,
-      amountInRounded,
-      amountOutRounded,
-      amountInRounded * (1 - slippage),
-      amountOutRounded * (1 - slippage),
+      // amountInRounded,
+      // amountOutRounded,
+      // amountInRounded * (1 - slippage),
+      // amountOutRounded * (1 - slippage),
+      amountInBN,
+      amountOutBN,
+      amountInMinBN,
+      amountOutMinBN,
       address,
       deadline
     ).send({ from: address });
@@ -389,6 +403,7 @@ export default function Liquidity () {
       <Row>
         <Button disabled={disableApprove} onClick={approveTokens}>Approve Tokens</Button>
         <Button disabled={disableProvide} onClick={provide}>Provide Liquidity</Button>
+        {/* <Button onClick={provide}>Provide Liquidity</Button> */}
         {isAddressSame
           ? <div style={{ color: 'red' }}>
               Addresses of input token and output token are the same,

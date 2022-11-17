@@ -2,6 +2,7 @@ import { useState } from 'react';
 import styled from 'styled-components/macro';
 import Button from 'react-bootstrap/Button';
 import Popover from 'react-bootstrap/Popover';
+import { NavLink } from 'react-router-dom';
 
 export default function TableHeader(props) {
   const [toggleSlippage, setToggleSlippage] = useState(false);
@@ -85,7 +86,11 @@ export default function TableHeader(props) {
     return (
       <>
         <div>Position Overview</div>
-        <Button style={{ marginLeft: 'auto' }}>+ New Position</Button>
+        <NavLink to='/provide-liquidity' style={{ marginLeft: 'auto' }}>
+          <Button>
+            + New Position
+          </Button>
+        </NavLink>
       </>
     )
   }

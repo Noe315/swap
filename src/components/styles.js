@@ -97,3 +97,16 @@ export const InputAddress = styled.input`
 export const Warning = styled.div`
   color: #ff8405;
 `
+
+// Components for Position (index.js)
+export const Row = styled.div`
+  padding: 1vw;
+  text-align: left;
+  border: 1px solid;
+  border-radius: inherit;
+  margin: 1vw 1vw;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+`;

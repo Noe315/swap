@@ -1,4 +1,4 @@
-import { router, factory, erc20 } from '../abis';
+import { router, factory, erc20, uniswapV2Pair } from '../abis';
 
 export const Contracts = {
   router: {
@@ -14,5 +14,9 @@ export const Contracts = {
   erc20: {
     name: 'erc20',
     abi: erc20,
+  },
+  uniswapV2Pair: {
+    name: 'uniswapV2Pair',
+    abi: uniswapV2Pair,
   },
 };
