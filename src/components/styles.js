@@ -110,3 +110,18 @@ export const Row = styled.div`
   justify-content: space-between;
   align-items: center;
 `;
+
+export const RemoveInput = styled.input`
+  width: 100%;
+  border-radius: 1vw;
+  padding-left: 1vw;
+
+  ::-webkit-inner-spin-button{
+      -webkit-appearance: none; 
+      margin: 0; 
+  }
+  ::-webkit-outer-spin-button{
+      -webkit-appearance: none; 
+      margin: 0; 
+  }
+`;

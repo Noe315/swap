@@ -5,7 +5,7 @@ import BoxInput from './components/BoxInput';
 import BoxWrapper from '../../components/BoxWrapper'
 import BoxInfo from './components/BoxInfo';
 import { getAccounts, getWeb3, loadSmartContracts } from '../../utils/connectWallet';
-import { Contracts } from '../../constants/address';
+import { Contracts, DECIMAL_PLACES } from '../../constants/address';
 import TableHeader from './components/TableHeader';
 
 export default function Liquidity () {
@@ -70,8 +70,14 @@ export default function Liquidity () {
           
           const amountOutWithDecimal = (amountInPercentage * poolBalanceTokenOut) / (1 - amountInPercentage);
           const amountOutWithoutDecimal = amountOutWithDecimal / (10 ** tokenOutDecimal);
-          // const amountOutWithoutDecimalRounded = Math.round(amountOutWithoutDecimal * tokenOutDecimal) / tokenOutDecimal;
-          const amountOutWithoutDecimalRounded = parseFloat(amountOutWithoutDecimal.toFixed(tokenOutDecimal));
+          // const amountOutWithoutDecimalRounded = Math.round(amountOutWithoutDecimal * 10 ** tokenOutDecimal) / (10 ** tokenOutDecimal);
+          // const amountOutWithoutDecimalRounded = parseFloat(amountOutWithoutDecimal.toFixed(tokenOutDecimal));
+          let amountOutWithoutDecimalRounded;
+          if (tokenOutDecimal > DECIMAL_PLACES) {
+            amountOutWithoutDecimalRounded = parseInt(amountOutWithoutDecimal * 10 ** DECIMAL_PLACES) / (10 ** DECIMAL_PLACES);
+          } else {
+            amountOutWithoutDecimalRounded = parseInt(amountOutWithoutDecimal * 10 ** tokenOutDecimal) / (10 ** tokenOutDecimal);
+          }
           setShareOfPool(amountInPercentage * 100);
           inputValue.current = value;
           // outputValue.current = amountOutWithoutDecimal;
@@ -116,8 +122,14 @@ export default function Liquidity () {
           
           const amountInWithDecimal = (amountOutPercentage * poolBalanceTokenIn) / (1 - amountOutPercentage);
           const amountInWithoutDecimal = amountInWithDecimal / (10 ** tokenInDecimal);
-          // const amountInWithoutDecimalRounded = Math.round(amountInWithoutDecimal * tokenInDecimal) / tokenInDecimal;
-          const amountInWithoutDecimalRounded = parseFloat(amountInWithoutDecimal.toFixed(tokenInDecimal));
+          // const amountInWithoutDecimalRounded = Math.round(amountInWithoutDecimal * 10 ** tokenInDecimal) / (10 ** tokenInDecimal);
+          // const amountInWithoutDecimalRounded = parseFloat(amountInWithoutDecimal.toFixed(tokenInDecimal));
+          let amountInWithoutDecimalRounded;
+          if (tokenInDecimal > DECIMAL_PLACES) {
+            amountInWithoutDecimalRounded = parseInt(amountInWithoutDecimal * 10 ** DECIMAL_PLACES) / (10 ** DECIMAL_PLACES);
+          } else {
+            amountInWithoutDecimalRounded = parseInt(amountInWithoutDecimal * 10 ** tokenInDecimal) / (10 ** tokenInDecimal);
+          }
           setShareOfPool(amountOutPercentage * 100);
           outputValue.current = value;
           // inputValue.current = amountInWithoutDecimal;
@@ -165,24 +177,6 @@ export default function Liquidity () {
 
   const shouldApproveButtonDisabled = () => {
     setDisableProvide(true);
-    // console.log(
-    //   'isInputValid.current: ',
-    //   isInputValid.current,
-    //   ' isOutputValid.current: ',
-    //   isOutputValid.current,
-    //   ' pair.current.addressTokenIn: ',
-    //   pair.current.addressTokenIn,
-    //   ' pair.current.addressTokenOut: ',
-    //   pair.current.addressTokenOut,
-    //   ' inputValue.current: ',
-    //   inputValue.current,
-    //   ' inputValue.current === "": ',
-    //   inputValue.current === "",
-    //   ' outputValue.current: ',
-    //   outputValue.current,
-    //   ' outputValue.current === "": ',
-    //   outputValue.current === "",
-    // );
     if (isInputValid.current && isOutputValid.current && inputValue.current && outputValue.current) {
       setDisableApprove(false);
     } else {
@@ -245,8 +239,8 @@ export default function Liquidity () {
       const tokenInDecimal = await _contractTokenIn.methods.decimals().call();
       const tokenOutDecimal = await _contractTokenOut.methods.decimals().call();
       
-      const poolBalanceTokenInWithoutDecimal = _poolBalanceTokenIn / tokenInDecimal;
-      const poolBalanceTokenOutWithoutDecimal = _poolBalanceTokenOut / tokenOutDecimal;
+      const poolBalanceTokenInWithoutDecimal = _poolBalanceTokenIn / (10 ** tokenInDecimal);
+      const poolBalanceTokenOutWithoutDecimal = _poolBalanceTokenOut / (10 ** tokenOutDecimal);
 
       // const _rate = poolBalanceTokenInWithoutDecimal / poolBalanceTokenOutWithoutDecimal;
       const _rate = poolBalanceTokenOutWithoutDecimal / poolBalanceTokenInWithoutDecimal;
@@ -276,18 +270,37 @@ export default function Liquidity () {
 
     // const amountInRounded = Math.round(inputValue.current * 10 ** tokenInDecimal);
     // const amountOutRounded = Math.round(outputValue.current * 10 ** tokenOutDecimal);
-    const amountInBN = new BN(inputValue.current).mul(new BN(10).pow(new BN(tokenInDecimal)));
-    const amountOutBN = new BN(outputValue.current).mul(new BN(10).pow(new BN(tokenOutDecimal)));
+    const amountInBN = new BN((inputValue.current * 10 ** tokenInDecimal).toString())
+      .mul(new BN(10)
+      .pow(new BN(tokenInDecimal)))
+      .div(new BN((10 ** tokenInDecimal).toString()))
+      .toString();
+    const amountOutBN = new BN((outputValue.current * 10 ** tokenOutDecimal).toString())
+      .mul(new BN(10)
+      .pow(new BN(tokenOutDecimal)))
+      .div(new BN((10 ** tokenOutDecimal).toString()))
+      .toString();
 
     // console.log('amountInRounded: ', amountInRounded, ' amountOutRounded: ', amountOutRounded);
-    console.log('amountInBN: ', amountInBN.toString(), ' amountOutBN: ', amountOutBN.toString());
+    console.log(
+      'amountInBN: ',
+      amountInBN,
+      ' amountOutBN: ',
+      amountOutBN,
+      ' amountInBN / (10 ** tokenInDecimal): ',
+      amountInBN / (10 ** tokenInDecimal),
+      ' amountOutBN / (10 ** tokenOutDecimal): ',
+      amountOutBN / (10 ** tokenOutDecimal)
+    );
     
     const transactionApproveTokenIn = await contractTokenIn.methods
       // .approve(Contracts.router.address, amountInRounded)
+      // .approve(Contracts.router.address, new BN((amountInBN / (10 ** tokenInDecimal)).toString()))
       .approve(Contracts.router.address, amountInBN)
       .send({ from: address});
     const transactionApproveTokenOut = await contractTokenOut.methods
       // .approve(Contracts.router.address, amountOutRounded)
+      // .approve(Contracts.router.address, new BN((amountOutBN / (10 ** tokenOutDecimal)).toString()))
       .approve(Contracts.router.address, amountOutBN)
       .send({ from: address});
 
