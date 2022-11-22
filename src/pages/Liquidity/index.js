@@ -39,7 +39,8 @@ export default function Liquidity () {
   const [poolBalanceTokenOut, setPoolBalanceTokenOut] = useState();
   const [shareOfPool, setShareOfPool] = useState(0);
   const [web3, setWeb3] = useState();
-  const [slippage, setSlippage] = useState();
+  // const [slippage, setSlippage] = useState();
+  const slippage = useRef();
 
   useEffect(() => {
     getWeb3Data();
@@ -315,31 +316,42 @@ export default function Liquidity () {
     const BN = web3.utils.BN;
     const tokenInDecimal = await contractTokenIn.methods.decimals().call();
     const tokenOutDecimal = await contractTokenOut.methods.decimals().call();
+    const _slippage = slippage.current.getSlippage();
 
     // const amountInRounded = Math.round(inputValue.current * 10 ** tokenInDecimal);
     // const amountOutRounded = Math.round(outputValue.current * 10 ** tokenOutDecimal);
-    const amountInBN = new BN(inputValue.current).mul(new BN(10).pow(new BN(tokenInDecimal)));
-    const amountOutBN = new BN(outputValue.current).mul(new BN(10).pow(new BN(tokenOutDecimal)));
-    const amountInMinBN = amountInBN.mul(new BN(10000).sub(new BN(slippage * 10000))).div(new BN(10000));
-    const amountOutMinBN = amountOutBN.mul(new BN(10000).sub(new BN(slippage * 10000))).div(new BN(10000));
+    const amountIn = new BN(inputValue.current).mul(new BN(10).pow(new BN(tokenInDecimal))).toString();
+    const amountOut = new BN(outputValue.current).mul(new BN(10).pow(new BN(tokenOutDecimal))).toString();
+    // const amountInMinBN = amountInBN.mul(new BN(10000).sub(new BN(_slippage * 10000))).div(new BN(10000));
+    // const amountOutMinBN = amountOutBN.mul(new BN(10000).sub(new BN(_slippage * 10000))).div(new BN(10000));
+    const amountInMin = new BN(amountIn)
+      .sub(new BN(amountIn)
+        .mul(new BN((_slippage * 100).toString()))
+        .div(new BN(10000)))
+      .toString();
+    const amountOutMin = new BN(amountOut)
+      .sub(new BN(amountOut)
+        .mul(new BN((_slippage * 100).toString()))
+        .div(new BN(10000)))
+      .toString();
 
     const deadline = (Date.parse(new Date()) / 1000) + (60 * 30);
 
     console.log(
-      'amountInBN: ',
-      amountInBN.toString(),
-      ' amountOutBN: ',
-      amountOutBN.toString(),
-      ' amountInMinBN: ',
-      amountInMinBN.toString(),
-      ' amountOutMinBN: ',
-      amountOutMinBN.toString(),
+      'amountIn: ',
+      amountIn,
+      ' amountOut: ',
+      amountOut,
+      ' amountInMin: ',
+      amountInMin,
+      ' amountOutMin: ',
+      amountOutMin,
       ' deadline: ',
       deadline,
-      ' slippage: ',
-      slippage,
+      ' _slippage: ',
+      _slippage,
       ' slippage * 10000: ',
-      slippage * 10000,
+      _slippage * 10000,
     );
 
     await contracts.router.methods.addLiquidity(
@@ -349,10 +361,10 @@ export default function Liquidity () {
       // amountOutRounded,
       // amountInRounded * (1 - slippage),
       // amountOutRounded * (1 - slippage),
-      amountInBN,
-      amountOutBN,
-      amountInMinBN,
-      amountOutMinBN,
+      amountIn,
+      amountOut,
+      amountInMin,
+      amountOutMin,
       address,
       deadline
     ).send({ from: address });
@@ -360,7 +372,8 @@ export default function Liquidity () {
 
   return (
     <BoxWrapper>
-      <TableHeader setSlippage={setSlippage} />
+      {/* <TableHeader setSlippage={setSlippage} /> */}
+      <TableHeader ref={slippage} />
       <Row>
         <BoxInput
           value={inputValueState}
@@ -416,7 +429,6 @@ export default function Liquidity () {
       <Row>
         <Button disabled={disableApprove} onClick={approveTokens}>Approve Tokens</Button>
         <Button disabled={disableProvide} onClick={provide}>Provide Liquidity</Button>
-        {/* <Button onClick={provide}>Provide Liquidity</Button> */}
         {isAddressSame
           ? <div style={{ color: 'red' }}>
               Addresses of input token and output token are the same,

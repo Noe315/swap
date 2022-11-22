@@ -140,7 +140,7 @@ import { DEFAULT_SLIPPAGE } from '../../../constants/address';
 //   );
 // };
 
-const TableHeader = forwardRef((props, _ref) => {
+const ModalHeader = forwardRef((props, _ref) => {
   const [toggleSlippage, setToggleSlippage] = useState(false);
   const [slippage, setSlippage] = useState(DEFAULT_SLIPPAGE);
   const [slippageDisplay, setSlippageDisplay] = useState(DEFAULT_SLIPPAGE);
@@ -155,6 +155,7 @@ const TableHeader = forwardRef((props, _ref) => {
     } else {
       setSlippage(DEFAULT_SLIPPAGE);
       setSlippageDisplay(DEFAULT_SLIPPAGE);
+      setIsValidCharacters(true);
     }
   };
 
@@ -240,4 +241,4 @@ const Header = styled.div`
   flex-direction: row;
 `;
 
-export default TableHeader;
+export default ModalHeader;
