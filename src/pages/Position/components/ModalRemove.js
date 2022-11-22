@@ -1,17 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Button } from 'react-bootstrap';
 import Modal from 'react-bootstrap/Modal';
 import { Contracts } from '../../../constants/address';
-import { getAccounts, getWeb3 } from '../../../utils/connectWallet';
+import { getAccounts, getWeb3, getWeb3Data } from '../../../utils/connectWallet';
 import InputRemove from './InputRemove';
 import TableHeader from './TableHeader';
 
 export default function ModalRemove (props) {
   const position = props.positionState;
   const [address, setAddress] = useState();
-  const [slippage, setSlippage] = useState();
-  // const [inputValue, setInputValue] = useState();
+  const slippage = useRef();
   const [web3, setWeb3] = useState();
+  const [web3Data, setWeb3Data] = useState();
   const [outputTokenAmounts, setOutputTokenAmounts] = useState();
   const [disableApprove, setDisableApprove] = useState(true);
   const [disableConfirm, setDisableConfirm] = useState(true);
@@ -19,11 +19,12 @@ export default function ModalRemove (props) {
   useEffect(() => {
     const _web3 = getWeb3();
     setWeb3(_web3);
-    const _getAccounts = async () => {
-      const addresses = await getAccounts();
-      setAddress(addresses[0]);
+    const _getWeb3Data = async () => {
+      const _web3Data = await getWeb3Data();
+      setAddress(_web3Data.address);
+      setWeb3Data(_web3Data.contracts);
     };
-    _getAccounts();
+    _getWeb3Data();
   }, []);
 
   const approve = async () => {
@@ -40,11 +41,56 @@ export default function ModalRemove (props) {
   };
 
   const remove = async () => {
+    const BN = web3.utils.BN;
+    const routerContract = web3Data.router;
+    const _slippage = slippage.current.getSlippage();
+
+    const amount0Min = new BN(outputTokenAmounts.outputToken0AmountWithDecimal)
+      .sub(new BN(outputTokenAmounts.outputToken0AmountWithDecimal)
+        .mul(new BN((_slippage * 100).toString()))
+        .div(new BN(10000)))
+      .toString();
+    const amount1Min = new BN(outputTokenAmounts.outputToken1AmountWithDecimal)
+    .sub(new BN(outputTokenAmounts.outputToken1AmountWithDecimal)
+      .mul(new BN((_slippage * 100).toString()))
+      .div(new BN(10000)))
+    .toString();
+    const deadline = (Date.parse(new Date()) / 1000) + (60 * 30);
     
+    console.log(
+      'amount0Min: ',
+      amount0Min,
+      ' amount1Min: ',
+      amount1Min,
+    );
+    
+    const txRemove = await routerContract.methods
+      .removeLiquidity(
+        position.token0Address,
+        position.token1Address,
+        outputTokenAmounts.outputTokenPoolWithDecimal,
+        amount0Min,
+        amount1Min,
+        address,
+        deadline
+      )
+      .send({ from: address });
+    console.log('txRemove: ', txRemove);
+  };
+
+  const onHideModal = () => {
+    props.handleClose();
+    setDisableApprove(true);
+    setDisableConfirm(true);
+    setOutputTokenAmounts();
   };
 
   return (
-    <Modal show={props.show} onHide={props.handleClose}>
+    <Modal
+      show={props.show}
+      // onHide={props.handleClose}
+      onHide={onHideModal}
+    >
       <Modal.Header closeButton>
         <Modal.Title>
           <div>Remove Liquidity</div>
@@ -53,10 +99,13 @@ export default function ModalRemove (props) {
       </Modal.Header>
       
       <Modal.Body>
-        <TableHeader setSlippage={setSlippage} />
+        <TableHeader
+          // setSlippage={setSlippage}
+          // setSlippage={checkSlippage}
+          ref={slippage}
+        />
         <InputRemove
           position={position}
-          // setInputValue={setInputValue}
           setOutputTokenAmounts={setOutputTokenAmounts}
           setDisableApprove={setDisableApprove}
           setDisableConfirm={setDisableConfirm}
@@ -83,7 +132,7 @@ export default function ModalRemove (props) {
           Approve
         </Button>
         <Button
-          onClick={() => console.log('outputTokenAmounts: ', outputTokenAmounts)}
+          onClick={remove}
           disabled={disableConfirm}
         >
           Confirm
