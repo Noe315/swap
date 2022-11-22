@@ -2,9 +2,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Button } from 'react-bootstrap';
 import Modal from 'react-bootstrap/Modal';
 import { Contracts } from '../../../constants/address';
-import { getAccounts, getWeb3, getWeb3Data } from '../../../utils/connectWallet';
+import { getWeb3, getWeb3Data } from '../../../utils/connectWallet';
 import InputRemove from './InputRemove';
-import TableHeader from './TableHeader';
+import ModalHeader from './ModalHeader';
 
 export default function ModalRemove (props) {
   const position = props.positionState;
@@ -99,7 +99,7 @@ export default function ModalRemove (props) {
       </Modal.Header>
       
       <Modal.Body>
-        <TableHeader
+        <ModalHeader
           // setSlippage={setSlippage}
           // setSlippage={checkSlippage}
           ref={slippage}
