@@ -23,3 +23,4 @@ export const Contracts = {
 
 export const DECIMAL_PLACES = 5;
 export const DEFAULT_SLIPPAGE = 0.5;
+export const DEFAULT_DEADLINE = 30;

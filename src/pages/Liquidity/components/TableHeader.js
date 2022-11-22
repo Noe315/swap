@@ -3,7 +3,7 @@ import styled from 'styled-components/macro';
 import Button from 'react-bootstrap/Button';
 import Popover from 'react-bootstrap/Popover';
 import { Invalid, Warning } from '../../../components/styles';
-import { DEFAULT_SLIPPAGE } from '../../../constants/address';
+import { DEFAULT_DEADLINE, DEFAULT_SLIPPAGE } from '../../../constants/address';
 
 // export default function TableHeader(props) {
 //   const [toggleSlippage, setToggleSlippage] = useState(false);
@@ -146,17 +146,20 @@ const TableHeader = forwardRef((props, _ref) => {
   const [toggleSlippage, setToggleSlippage] = useState(false);
   const [slippage, setSlippage] = useState(DEFAULT_SLIPPAGE);
   const [slippageDisplay, setSlippageDisplay] = useState(DEFAULT_SLIPPAGE);
+  const [deadline, setDeadline] = useState(DEFAULT_DEADLINE);
   const [isValidCharacters, setIsValidCharacters] = useState(true);
   const [isFrontrunRisk, setIsFrontrunRisk] = useState();
 
   const handleCloseSlippage = () => {
     setToggleSlippage(!toggleSlippage);
-    if (slippage && isValidCharacters) {
+    if (slippage && isValidCharacters && deadline) {
       setSlippage(slippage);
       setSlippageDisplay(slippage);
+      setDeadline(deadline);
     } else {
       setSlippage(DEFAULT_SLIPPAGE);
       setSlippageDisplay(DEFAULT_SLIPPAGE);
+      setDeadline(DEFAULT_DEADLINE);
       setIsValidCharacters(true);
     }
   };
@@ -192,6 +195,9 @@ const TableHeader = forwardRef((props, _ref) => {
   useImperativeHandle(_ref, () => ({
     getSlippage: () => {
       return slippage;
+    },
+    getDeadline: () => {
+      return deadline;
     }
   }));
 
