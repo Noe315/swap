@@ -87,6 +87,8 @@ export default function TableHeader(props) {
         // isFrontrunRisk.current = false;
         return true;
       }
+    } else {
+      setIsValidCharacters(false);
     }
   }
 
