@@ -20,3 +20,5 @@ export const Contracts = {
     abi: uniswapV2Pair,
   },
 };
+
+export const DECIMAL_PLACES = 5;

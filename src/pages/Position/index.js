@@ -4,18 +4,19 @@ import TableHeader from '../../components/TableHeader';
 import { Row } from '../../components/styles';
 import { Button } from 'react-bootstrap';
 import { getAccounts, getWeb3, loadSmartContracts } from '../../utils/connectWallet';
-import { Contracts } from '../../constants/address';
-
+import { Contracts, DECIMAL_PLACES } from '../../constants/address';
+import ModalRemove from './components/ModalRemove';
 
 export default function Position () {
   const MINIMUM_LIQUIDITY = 1000;
-  const DECIMAL_PLACES = 5;
   const web3 = useRef();
   const contracts = useRef();
   const address = useRef();
   const [allPairs, setAllPairs] = useState();
   const [positions, setPositions] = useState([]);
+  const [positionState, setPositionState] = useState();
   const run = useRef(true);
+  const [isModalRemove, setIsModalRemove] = useState(false);
   
   useEffect(() => {
     getWeb3Data();
@@ -62,6 +63,8 @@ export default function Position () {
       token1Address: '',
       token0Name: '',
       token1Name: '',
+      token0Decimal: '',
+      token1Decimal: '',
       token0AmountWithDecimal: '',
       token1AmountWithDecimal: '',
       token0AmountWithoutDecimal: '',
@@ -71,6 +74,7 @@ export default function Position () {
       poolAmount: '',
       poolShare: '',
       poolShareDisplay: '',
+      poolAddress: pair,
     };
     position.poolAmount = await pairContract.methods.balanceOf(address.current).call();
     const poolTotalSupply = await pairContract.methods.totalSupply().call();
@@ -92,24 +96,58 @@ export default function Position () {
       const token0Decimal = await token0Contract.methods.decimals().call();
       const token1Decimal = await token1Contract.methods.decimals().call();
 
-      position.token0AmountWithDecimal = pairBalanceToken0 * percentageInPool;
-      position.token1AmountWithDecimal = pairBalanceToken1 * percentageInPool;
+      position.token0Decimal = token0Decimal;
+      position.token1Decimal = token1Decimal;
+      // position.token0AmountWithDecimal = pairBalanceToken0 * percentageInPool;
+      // position.token1AmountWithDecimal = pairBalanceToken1 * percentageInPool;
+      // position.token0AmountWithoutDecimal = position.token0AmountWithDecimal / (10 ** token0Decimal);
+      // position.token1AmountWithoutDecimal = position.token1AmountWithDecimal / (10 ** token1Decimal);
+      position.token0AmountWithDecimal = new BN(pairBalanceToken0).mul(new BN(percentageInPool * 10000)).div(new BN(10000)).toString();
+      position.token1AmountWithDecimal = new BN(pairBalanceToken1).mul(new BN(percentageInPool * 10000)).div(new BN(10000)).toString();
       position.token0AmountWithoutDecimal = position.token0AmountWithDecimal / (10 ** token0Decimal);
       position.token1AmountWithoutDecimal = position.token1AmountWithDecimal / (10 ** token1Decimal);
-      // position.token0AmountWithDecimal = new BN(pairBalanceToken0).mul(new BN(percentageInPool * 10000)).div(new BN(10000)).toString();
-      // position.token1AmountWithDecimal = new BN(pairBalanceToken1).mul(new BN(percentageInPool * 10000)).div(new BN(10000)).toString();
-      // position.token0AmountWithoutDecimal = position.token0AmountWithDecimal.div(new BN(10 ** token0Decimal)).toString();
-      // position.token1AmountWithoutDecimal = position.token1AmountWithDecimal.div(new BN(10 ** token1Decimal)).toString();
+      // position.token0AmountWithoutDecimal = new BN(position.token0AmountWithDecimal).div(new BN(10 ** token0Decimal)).toString();
+      // position.token1AmountWithoutDecimal = new BN(position.token1AmountWithDecimal).div(new BN(10 ** token1Decimal)).toString();
 
+      // console.log(
+      //   'position.token0AmountWithDecimal: ',
+      //   position.token0AmountWithDecimal,
+      //   ' position.token1AmountWithDecimal: ',
+      //   position.token1AmountWithDecimal,
+      //   'position.token0AmountWithoutDecimal: ',
+      //   position.token0AmountWithoutDecimal,
+      //   ' position.token1AmountWithoutDecimal: ',
+      //   position.token1AmountWithoutDecimal,
+      // );
       console.log(
-        'position.token0AmountWithDecimal: ',
+        'pairBalanceToken0: ',
+        pairBalanceToken0,
+        ' new BN(pairBalanceToken0): ',
+        new BN(pairBalanceToken0).toString(),
+        ' percentageInPool: ',
+        percentageInPool,
+        ' percentageInPool * 10000: ',
+        percentageInPool * 10000,
+        ' new BN(percentageInPool * 10000): ',
+        new BN(percentageInPool * 10000).toString(),
+        ' new BN(pairBalanceToken0).mul(new BN(percentageInPool * 10000)): ',
+        new BN(pairBalanceToken0).mul(new BN(percentageInPool * 10000)).toString(),
+        ' new BN(10000): ',
+        new BN(10000).toString(),
+        ' new BN(pairBalanceToken0).mul(new BN(percentageInPool * 10000)).div(new BN(10000)): ',
+        new BN(pairBalanceToken0).mul(new BN(percentageInPool * 10000)).div(new BN(10000)).toString(),
+        ' position.token0AmountWithDecimal: ',
         position.token0AmountWithDecimal,
-        ' position.token1AmountWithDecimal: ',
-        position.token1AmountWithDecimal,
-        'position.token0AmountWithoutDecimal: ',
+        ' new BN(position.token0AmountWithDecimal): ',
+        new BN(position.token0AmountWithDecimal).toString(),
+        ' 10 ** token0Decimal: ',
+        10 ** token0Decimal,
+        ' new BN(10 ** token0Decimal): ',
+        new BN((10 ** token0Decimal).toString()).toString(),
+        ' new BN(position.token0AmountWithDecimal).div(new BN(10 ** token0Decimal)): ',
+        new BN(position.token0AmountWithDecimal).div(new BN((10 ** token0Decimal).toString())).toString(),
+        ' position.token0AmountWithoutDecimal: ',
         position.token0AmountWithoutDecimal,
-        ' position.token1AmountWithoutDecimal: ',
-        position.token1AmountWithoutDecimal,
       );
 
       if (token0Decimal > DECIMAL_PLACES) {
@@ -136,15 +174,24 @@ export default function Position () {
     }
   };
 
+  const showModalRemove = (position) => {
+    setIsModalRemove(!isModalRemove);
+    setPositionState(position);
+  }
+
   return (
     <BoxWrapper style={{ width: '55vw' }}>
+      <ModalRemove
+        show={isModalRemove}
+        handleClose={() => setIsModalRemove(false)}
+        positionState={positionState}
+      />
       <TableHeader action="position" />
-      <Button onClick={() => {console.log('positions: ', positions)}}>Test</Button>
       {
         positions
-          ? positions.map(position => {
+          ? positions.map((position, index) => {
             return (
-              <Row>
+              <Row key={`row-${index}`}>
                 <div>
                   <h5>{position.token0Name} - {position.token1Name}</h5>
                   <div>
@@ -156,7 +203,12 @@ export default function Position () {
                     Pool share: {position.poolShareDisplay}%
                   </div>
                 </div>
-                <Button style={{ height: '3vw' }}>Remove</Button>
+                <Button
+                  style={{ height: '3vw' }}
+                  onClick={() => showModalRemove(position)}
+                >
+                  Remove
+                </Button>
               </Row>
             );
           })
