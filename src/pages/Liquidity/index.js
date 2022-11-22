@@ -40,7 +40,7 @@ export default function Liquidity () {
   const [shareOfPool, setShareOfPool] = useState(0);
   const [web3, setWeb3] = useState();
   // const [slippage, setSlippage] = useState();
-  const slippage = useRef();
+  const slippageAndDeadline = useRef();
 
   useEffect(() => {
     getWeb3Data();
@@ -316,7 +316,7 @@ export default function Liquidity () {
     const BN = web3.utils.BN;
     const tokenInDecimal = await contractTokenIn.methods.decimals().call();
     const tokenOutDecimal = await contractTokenOut.methods.decimals().call();
-    const _slippage = slippage.current.getSlippage();
+    const _slippage = slippageAndDeadline.current.getSlippage();
 
     // const amountInRounded = Math.round(inputValue.current * 10 ** tokenInDecimal);
     // const amountOutRounded = Math.round(outputValue.current * 10 ** tokenOutDecimal);
@@ -335,7 +335,7 @@ export default function Liquidity () {
         .div(new BN(10000)))
       .toString();
 
-    const deadline = (Date.parse(new Date()) / 1000) + (60 * 30);
+    const deadline = (Date.parse(new Date()) / 1000) + (60 * slippageAndDeadline.current.getDeadline());
 
     console.log(
       'amountIn: ',
@@ -373,7 +373,7 @@ export default function Liquidity () {
   return (
     <BoxWrapper>
       {/* <TableHeader setSlippage={setSlippage} /> */}
-      <TableHeader ref={slippage} />
+      <TableHeader ref={slippageAndDeadline} />
       <Row>
         <BoxInput
           value={inputValueState}
@@ -427,8 +427,18 @@ export default function Liquidity () {
         }
       </Row>
       <Row>
-        <Button disabled={disableApprove} onClick={approveTokens}>Approve Tokens</Button>
-        <Button disabled={disableProvide} onClick={provide}>Provide Liquidity</Button>
+        <Button
+          disabled={disableApprove}
+          onClick={approveTokens}
+        >
+          Approve Tokens
+        </Button>
+        <Button
+          disabled={disableProvide}
+          onClick={provide}
+        >
+          Provide Liquidity
+        </Button>
         {isAddressSame
           ? <div style={{ color: 'red' }}>
               Addresses of input token and output token are the same,

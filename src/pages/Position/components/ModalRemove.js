@@ -9,7 +9,7 @@ import ModalHeader from './ModalHeader';
 export default function ModalRemove (props) {
   const position = props.positionState;
   const [address, setAddress] = useState();
-  const slippage = useRef();
+  const slippageAndDeadline = useRef();
   const [web3, setWeb3] = useState();
   const [web3Data, setWeb3Data] = useState();
   const [outputTokenAmounts, setOutputTokenAmounts] = useState();
@@ -43,7 +43,7 @@ export default function ModalRemove (props) {
   const remove = async () => {
     const BN = web3.utils.BN;
     const routerContract = web3Data.router;
-    const _slippage = slippage.current.getSlippage();
+    const _slippage = slippageAndDeadline.current.getSlippage();
 
     const amount0Min = new BN(outputTokenAmounts.outputToken0AmountWithDecimal)
       .sub(new BN(outputTokenAmounts.outputToken0AmountWithDecimal)
@@ -55,13 +55,15 @@ export default function ModalRemove (props) {
       .mul(new BN((_slippage * 100).toString()))
       .div(new BN(10000)))
     .toString();
-    const deadline = (Date.parse(new Date()) / 1000) + (60 * 30);
+    const deadline = (Date.parse(new Date()) / 1000) + (60 * slippageAndDeadline.current.getDeadline());
     
     console.log(
       'amount0Min: ',
       amount0Min,
       ' amount1Min: ',
       amount1Min,
+      ' deadline: ',
+      deadline,
     );
     
     const txRemove = await routerContract.methods
@@ -102,7 +104,8 @@ export default function ModalRemove (props) {
         <ModalHeader
           // setSlippage={setSlippage}
           // setSlippage={checkSlippage}
-          ref={slippage}
+          // ref={slippage}
+          ref={slippageAndDeadline}
         />
         <InputRemove
           position={position}
