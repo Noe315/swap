@@ -125,3 +125,21 @@ export const RemoveInput = styled.input`
       margin: 0; 
   }
 `;
+
+// General components
+export const TableHeader = styled.div`
+  padding: 1vw;
+  display: flex;
+  flex-direction: row;
+`;
+
+export const InputNumber = styled.input`
+  ::-webkit-inner-spin-button{
+      -webkit-appearance: none; 
+      margin: 0; 
+  }
+  ::-webkit-outer-spin-button{
+      -webkit-appearance: none; 
+      margin: 0; 
+  }
+`;
