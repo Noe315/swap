@@ -1,26 +1,17 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { RemoveInput } from '../../../components/styles';
-import { getWeb3, getWeb3Data } from '../../../utils/connectWallet';
-import { Contracts } from '../../../constants/address';
+import { getWeb3 } from '../../../utils/connectWallet';
 
 export default function InputRemove (props) {
   const position = props.position;
   console.log('position: ', position);
-  const token = useRef();
   const [web3, setWeb3] = useState();
-  const [web3Data, setWeb3Data] = useState();
   const [inputValue, setInputValue] = useState();
 
   useEffect(() => {
     const _web3 = getWeb3();
     setWeb3(_web3);
-    _getWeb3Data();
   }, []);
-
-  const _getWeb3Data = async () => {
-    const _web3Data = await getWeb3Data();
-    setWeb3Data(_web3Data);
-  }
 
   const checkInput = (e) => {
     const value = e.target.value;

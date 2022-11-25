@@ -5,8 +5,9 @@ import BoxInput from './components/BoxInput';
 import BoxWrapper from '../../components/BoxWrapper'
 import BoxInfo from './components/BoxInfo';
 import { getAccounts, getWeb3, loadSmartContracts } from '../../utils/connectWallet';
-import { Contracts, DECIMAL_PLACES } from '../../constants/address';
-import TableHeader from './components/TableHeader';
+import { Contracts, DECIMAL_PLACES, DEFAULT_SLIPPAGE } from '../../constants/address';
+import { TableHeader } from '../../components/styles';
+import ModalSlippage from '../../components/ModalSlippage';
 
 export default function Liquidity () {
   const pool = useRef();
@@ -41,6 +42,7 @@ export default function Liquidity () {
   const [web3, setWeb3] = useState();
   // const [slippage, setSlippage] = useState();
   const slippageAndDeadline = useRef();
+  const [isModalSlippage, setIsModalSlippage] = useState(false);
 
   useEffect(() => {
     getWeb3Data();
@@ -373,7 +375,29 @@ export default function Liquidity () {
   return (
     <BoxWrapper>
       {/* <TableHeader setSlippage={setSlippage} /> */}
-      <TableHeader ref={slippageAndDeadline} />
+      {/* <TableHeader ref={slippageAndDeadline} /> */}
+      <TableHeader>
+        <div>Swap</div>
+        <ModalSlippage
+          show={isModalSlippage}
+          handleClose={() => setIsModalSlippage(false)}
+          ref={slippageAndDeadline}
+        />
+        <div
+          style={{ marginLeft: 'auto', paddingRight: '1vw' }}
+          onClick={() => setIsModalSlippage(true)}
+        >
+          Slippage {' '}
+          {
+            slippageAndDeadline.current
+            ? slippageAndDeadline.current.getSlippage()
+              ? Math.round(slippageAndDeadline.current.getSlippage() * 100) / 100
+              : DEFAULT_SLIPPAGE
+            : DEFAULT_SLIPPAGE
+          } %
+        </div>
+      </TableHeader>
+
       <Row>
         <BoxInput
           value={inputValueState}

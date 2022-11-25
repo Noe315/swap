@@ -1,7 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from 'react-bootstrap';
 import Modal from 'react-bootstrap/Modal';
-import { Contracts } from '../../../constants/address';
+import ModalSlippage from '../../../components/ModalSlippage';
+import { TableHeader } from '../../../components/styles';
+import { Contracts, DEFAULT_SLIPPAGE } from '../../../constants/address';
 import { getWeb3, getWeb3Data } from '../../../utils/connectWallet';
 import InputRemove from './InputRemove';
 import ModalHeader from './ModalHeader';
@@ -15,6 +17,7 @@ export default function ModalRemove (props) {
   const [outputTokenAmounts, setOutputTokenAmounts] = useState();
   const [disableApprove, setDisableApprove] = useState(true);
   const [disableConfirm, setDisableConfirm] = useState(true);
+  const [isModalSlippage, setIsModalSlippage] = useState(false);
 
   useEffect(() => {
     const _web3 = getWeb3();
@@ -101,12 +104,32 @@ export default function ModalRemove (props) {
       </Modal.Header>
       
       <Modal.Body>
-        <ModalHeader
+        {/* <ModalHeader
           // setSlippage={setSlippage}
           // setSlippage={checkSlippage}
           // ref={slippage}
           ref={slippageAndDeadline}
-        />
+        /> */}
+        <TableHeader>
+          <ModalSlippage
+            show={isModalSlippage}
+            handleClose={() => setIsModalSlippage(false)}
+            ref={slippageAndDeadline}
+          />
+          <div
+            style={{ marginLeft: 'auto', paddingRight: '1vw' }}
+            onClick={() => setIsModalSlippage(true)}
+          >
+            Slippage {' '}
+            {
+              slippageAndDeadline.current
+              ? slippageAndDeadline.current.getSlippage()
+                ? Math.round(slippageAndDeadline.current.getSlippage() * 100) / 100
+                : DEFAULT_SLIPPAGE
+              : DEFAULT_SLIPPAGE
+            } %
+          </div>
+        </TableHeader>
         <InputRemove
           position={position}
           setOutputTokenAmounts={setOutputTokenAmounts}

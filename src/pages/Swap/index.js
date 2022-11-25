@@ -1,10 +1,12 @@
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import styled from 'styled-components/macro';
 import Button from 'react-bootstrap/Button';
-import BoxInput from '../components/BoxInput';
-import BoxInfo from '../components/BoxInfo';
-import BoxWrapper from '../components/BoxWrapper';
-import TableHeader from '../components/TableHeader';
+import BoxInput from '../../components/BoxInput';
+import BoxInfo from '../../components/BoxInfo';
+import BoxWrapper from '../../components/BoxWrapper';
+import { TableHeader } from '../../components/styles';
+import ModalSlippage from '../../components/ModalSlippage';
+import { DEFAULT_SLIPPAGE } from '../../constants/address';
 
 export default function Swap () {
   const [tokenIn, setTokenIn] = useState('KAI');
@@ -13,6 +15,8 @@ export default function Swap () {
   const [inputValue, setInputValue] = useState();
   const [outputValue, setOutputValue] = useState();
   const [disabled, setDisabled] = useState(true);
+  const [isModalSlippage, setIsModalSlippage] = useState(false);
+  const slippageAndDeadline = useRef();
   
   const swapToken = () => {
     setTokenIn(tokenOut);
@@ -49,7 +53,39 @@ export default function Swap () {
 
   return (
     <BoxWrapper>
-      <TableHeader action='swap' />
+      {/* <TableHeader ref={slippageAndDeadline} /> */}
+      <TableHeader>
+        <div>Swap</div>
+        <ModalSlippage
+          show={isModalSlippage}
+          handleClose={() => setIsModalSlippage(false)}
+          ref={slippageAndDeadline}
+        />
+        <div
+          style={{ marginLeft: 'auto', paddingRight: '1vw' }}
+          onClick={() => setIsModalSlippage(true)}
+        >
+          Slippage {' '}
+          {
+            slippageAndDeadline.current
+            ? slippageAndDeadline.current.getSlippage()
+              ? Math.round(slippageAndDeadline.current.getSlippage() * 100) / 100
+              : DEFAULT_SLIPPAGE
+            : DEFAULT_SLIPPAGE
+          } %
+        </div>
+      </TableHeader>
+      <Button onClick={
+          () => console.log(
+            'slippageAndDeadline: ',
+            slippageAndDeadline.current.getSlippage(),
+            ' ',
+            slippageAndDeadline.current.getDeadline()
+          ) 
+        }
+      >
+        Test
+      </Button>
       <Row>
         <BoxInput
           action='swap'
