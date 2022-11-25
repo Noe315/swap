@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react'
 import Navbar from 'react-bootstrap/Navbar'
 import Container from 'react-bootstrap/Container'
 import Nav from 'react-bootstrap/Nav'
+import { NavLink } from 'react-router-dom';
 import { Button, NavDropdown } from 'react-bootstrap';
 import { connectToMetamask, getAccounts } from '../utils/connectWallet';
 import { shortenAddress } from '../utils/helpers';
@@ -55,8 +56,18 @@ export default function Header () {
           <Nav.Link href="swap">Swap</Nav.Link>
           {/* <Nav.Link href="provide-liquidity">Liquidity</Nav.Link> */}
           <NavDropdown title="Liquidity">
-            <NavDropdown.Item href="/provide-liquidity">Provide Liquidity</NavDropdown.Item>
-            <NavDropdown.Item href="/view-liquidity">View my Positions</NavDropdown.Item>
+            {/* <NavDropdown.Item href="/provide-liquidity">Provide Liquidity</NavDropdown.Item>
+            <NavDropdown.Item href="/view-liquidity">View my Positions</NavDropdown.Item> */}
+            <NavDropdown.Item>
+              <NavLink to='/provide-liquidity'>
+                Provide Liquidity
+              </NavLink>
+            </NavDropdown.Item>
+            <NavDropdown.Item>
+              <NavLink to='/view-liquidity'>
+                View my Positions
+              </NavLink>
+            </NavDropdown.Item>
           </NavDropdown>
         </Nav>
         <Button onClick={() => connectToMetamask()}>
