@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import BoxWrapper from '../../components/BoxWrapper';
-import TableHeader from '../../components/TableHeader';
+import TableHeader from './components/TableHeader';
 import { Row } from '../../components/styles';
 import { Button } from 'react-bootstrap';
 import { getAccounts, getWeb3, loadSmartContracts } from '../../utils/connectWallet';
@@ -186,7 +186,8 @@ export default function Position () {
         handleClose={() => setIsModalRemove(false)}
         positionState={positionState}
       />
-      <TableHeader action="position" />
+      {/* <TableHeader action="position" /> */}
+      <TableHeader />
       {
         positions
           ? positions.map((position, index) => {

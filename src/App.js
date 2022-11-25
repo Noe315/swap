@@ -10,9 +10,9 @@ import Position from './pages/Position/index'
 function App () {
   return (
     <div className="App">
-      <Header />
 
       <Router>
+        <Header />
         <Routes>
           <Route path='/' element={<Swap />} />
           <Route path='/swap' element={<Swap />} />
