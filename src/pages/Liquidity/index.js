@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components/macro';
 import Button from 'react-bootstrap/Button';
-import BoxInput from './components/BoxInput';
+import BoxInput from '../../components/BoxInput';
 import BoxWrapper from '../../components/BoxWrapper'
 import BoxInfo from './components/BoxInfo';
 import { getAccounts, getWeb3, loadSmartContracts } from '../../utils/connectWallet';
@@ -17,12 +17,13 @@ export default function Liquidity () {
   const outputValue = useRef();
   const isInputValid = useRef();
   const isOutputValid = useRef();
-  const pair = useRef({
-    nameTokenIn: '',
-    nameTokenOut: '',
-    addressTokenIn: '',
-    addressTokenOut: '',
-  });
+  // const pair = useRef({
+  //   nameTokenIn: '',
+  //   nameTokenOut: '',
+  //   addressTokenIn: '',
+  //   addressTokenOut: '',
+  // });
+  // const pair = useRef();
   const [address, setAddress] = useState();
   const [contracts, setContracts] = useState();
   const [balanceIn, setBalanceIn] = useState();
@@ -59,10 +60,13 @@ export default function Liquidity () {
   };
 
   const inputOnChange = async (event) => {
+    const infoTokenIn = tokenIn.current.getTokenInfo();
+    const infoTokenOut = tokenOut.current.getTokenInfo();
     const value = event.target.value;
     checkInputAgainstBalance(value);
 
-    if (pair.current.addressTokenIn && pair.current.addressTokenOut) {
+    // if (pair.current.addressTokenIn && pair.current.addressTokenOut) {
+    if (infoTokenIn && infoTokenOut) {
       if (isPairExist) {
         if (value) {
           const tokenInDecimal = await contractTokenIn.methods.decimals().call();
@@ -111,10 +115,13 @@ export default function Liquidity () {
   };
 
   const outputOnChange = async (event) => {
+    const infoTokenIn = tokenIn.current.getTokenInfo();
+    const infoTokenOut = tokenOut.current.getTokenInfo();
     const value = event.target.value;
     checkOutputAgainstBalance(value);
 
-    if (pair.current.addressTokenIn && pair.current.addressTokenOut) {
+    // if (pair.current.addressTokenIn && pair.current.addressTokenOut) {
+    if (infoTokenIn && infoTokenOut) {
       if (isPairExist) {
         if (value) {
           const tokenOutDecimal = await contractTokenOut.methods.decimals().call();
@@ -166,7 +173,11 @@ export default function Liquidity () {
     if (value > balanceIn) {
       isInputValid.current = false;
     } else {
-      isInputValid.current = true;
+      if (value > 0) {
+        isInputValid.current = true;
+      } else {
+        isInputValid.current = false;
+      }
     }
   };
 
@@ -174,18 +185,25 @@ export default function Liquidity () {
     if (value > balanceOut) {
       isOutputValid.current = false;
     } else {
-      isOutputValid.current = true;
+      if (value > 0) {
+        isOutputValid.current = true;
+      } else {
+        isOutputValid.current = false;
+      }
     }
   };
 
   const shouldApproveButtonDisabled = () => {
+    const infoTokenIn = tokenIn.current.getTokenInfo();
+    const infoTokenOut = tokenOut.current.getTokenInfo();
     setDisableProvide(true);
     if (isInputValid.current && isOutputValid.current && inputValue.current && outputValue.current) {
       setDisableApprove(false);
     } else {
       setDisableApprove(true);
     }
-    if (pair.current.addressTokenIn === pair.current.addressTokenOut) {
+    // if (pair.current.addressTokenIn === pair.current.addressTokenOut) {
+    if (infoTokenIn.address === infoTokenOut.address) {
       setDisableApprove(true);
       setIsAddressSame(true);
     } else {
@@ -197,24 +215,36 @@ export default function Liquidity () {
   };
   
   const checkPairAndGetRate = async () => {
-    if (
-      pair.current.addressTokenIn &&
-      pair.current.addressTokenOut &&
-      pair.current.nameTokenIn &&
-      pair.current.nameTokenOut
-    ) {
+    const infoTokenIn = tokenIn.current.getTokenInfo();
+    const infoTokenOut = tokenOut.current.getTokenInfo();
+    // if (
+    //   pair.current.addressTokenIn &&
+    //   pair.current.addressTokenOut &&
+    //   pair.current.nameTokenIn &&
+    //   pair.current.nameTokenOut
+    // ) {
+    //   await checkPairExist();
+    //   await getRate();
+    // }
+    if (infoTokenIn && infoTokenOut) {
       await checkPairExist();
       await getRate();
     }
     
-    tokenIn.current = pair.current.nameTokenIn;
-    tokenOut.current = pair.current.nameTokenOut;
+    // tokenIn.current = pair.current.nameTokenIn;
+    // tokenOut.current = pair.current.nameTokenOut;
+    // tokenIn.current = infoTokenIn.name;
+    // tokenOut.current = infoTokenOut.name;
   }
   
   const checkPairExist = async () => {
+    const infoTokenIn = tokenIn.current.getTokenInfo();
+    const infoTokenOut = tokenOut.current.getTokenInfo();
     const _pair = await contracts.factory.methods.getPair(
-      pair.current.addressTokenIn,
-      pair.current.addressTokenOut,
+      // pair.current.addressTokenIn,
+      // pair.current.addressTokenOut,
+      infoTokenIn.address,
+      infoTokenOut.address,
     ).call();
     const pair1Int = parseInt(_pair, 16);
     if (pair1Int === 0) {
@@ -228,9 +258,13 @@ export default function Liquidity () {
   };
 
   const getRate = async () => {
+    const infoTokenIn = tokenIn.current.getTokenInfo();
+    const infoTokenOut = tokenOut.current.getTokenInfo();
     if (web3) {
-      const _contractTokenIn = new web3.eth.Contract(Contracts.erc20.abi, pair.current.addressTokenIn);
-      const _contractTokenOut = new web3.eth.Contract(Contracts.erc20.abi, pair.current.addressTokenOut);
+      // const _contractTokenIn = new web3.eth.Contract(Contracts.erc20.abi, pair.current.addressTokenIn);
+      // const _contractTokenOut = new web3.eth.Contract(Contracts.erc20.abi, pair.current.addressTokenOut);
+      const _contractTokenIn = new web3.eth.Contract(Contracts.erc20.abi, infoTokenIn.address);
+      const _contractTokenOut = new web3.eth.Contract(Contracts.erc20.abi, infoTokenOut.address);
       setContractTokenIn(_contractTokenIn);
       setContractTokenOut(_contractTokenOut);
 
@@ -254,7 +288,10 @@ export default function Liquidity () {
   };
 
   const getRateWhenPairNotExist = () => {
-    if (pair.current.addressTokenIn && pair.current.addressTokenOut) {
+    const infoTokenIn = tokenIn.current.getTokenInfo();
+    const infoTokenOut = tokenOut.current.getTokenInfo();
+    // if (pair.current.addressTokenIn && pair.current.addressTokenOut) {
+    if (infoTokenIn && infoTokenOut) {
       const _rate = inputValue.current / outputValue.current;
       if (_rate && _rate !== Infinity) {
         setRate(_rate);
@@ -315,6 +352,8 @@ export default function Liquidity () {
   }
 
   const provide = async () => {
+    const infoTokenIn = tokenIn.current.getTokenInfo();
+    const infoTokenOut = tokenOut.current.getTokenInfo();
     const BN = web3.utils.BN;
     const tokenInDecimal = await contractTokenIn.methods.decimals().call();
     const tokenOutDecimal = await contractTokenOut.methods.decimals().call();
@@ -357,8 +396,10 @@ export default function Liquidity () {
     );
 
     await contracts.router.methods.addLiquidity(
-      pair.current.addressTokenIn,
-      pair.current.addressTokenOut,
+      // pair.current.addressTokenIn,
+      // pair.current.addressTokenOut,
+      infoTokenIn.address,
+      infoTokenOut.address,
       // amountInRounded,
       // amountOutRounded,
       // amountInRounded * (1 - slippage),
@@ -370,6 +411,28 @@ export default function Liquidity () {
       address,
       deadline
     ).send({ from: address });
+  }
+
+  const onTokenSelect = async () => {
+    resetInputs();
+    const infoTokenIn = tokenIn.current.getTokenInfo();
+    const infoTokenOut = tokenOut.current.getTokenInfo();
+    if (infoTokenIn && infoTokenOut) {
+      await checkPairAndGetRate();
+      if (infoTokenIn.address === infoTokenOut.address) {
+        setIsAddressSame(true);
+      } else {
+        setIsAddressSame(false);
+      }
+    }
+  };
+
+  const resetInputs = () => {
+    inputValue.current = '';
+    outputValue.current = '';
+    setInputValueState('');
+    setOutputValueState('');
+    shouldApproveButtonDisabled();
   }
 
   return (
@@ -397,6 +460,33 @@ export default function Liquidity () {
           } %
         </div>
       </TableHeader>
+      <Button onClick={
+          () => console.log(
+            'slippage: ',
+            slippageAndDeadline.current.getSlippage(),
+            ' deadline: ',
+            slippageAndDeadline.current.getDeadline(),
+            // ' pair: ',
+            // pair.current.getPair(),
+            ' tokenIn: ',
+            tokenIn.current.getTokenInfo(),
+            ' tokenOut: ',
+            tokenOut.current.getTokenInfo(),
+            ' disableApprove: ',
+            disableApprove,
+            ' inputValue: ',
+            inputValue,
+            ' tokenOut: ',
+            tokenOut,
+            ' tokenIn: ',
+            tokenIn,
+            ' isPairExist: ',
+            isPairExist,
+          ) 
+        }
+      >
+        Test
+      </Button>
 
       <Row>
         <BoxInput
@@ -405,12 +495,14 @@ export default function Liquidity () {
           // inputValueState={inputValueState}
           onChange={inputOnChange}
           name='inputToken'
-          token={tokenIn}
-          pair={pair}
+          // token={tokenIn}
+          ref={tokenIn}
+          // pair={pair}
           isPairExist={isPairExist}
           checkPairAndGetRate={checkPairAndGetRate}
           setBalanceIn={setBalanceIn}
-          shouldApproveButtonDisabled={shouldApproveButtonDisabled}
+          // shouldApproveButtonDisabled={shouldApproveButtonDisabled}
+          onTokenSelect={onTokenSelect}
         />
       </Row>
       <Row>
@@ -420,34 +512,49 @@ export default function Liquidity () {
           // outputValueState={outputValueState}
           onChange={outputOnChange}
           name='outputToken'
-          token={tokenOut}
-          pair={pair}
+          // token={tokenOut}
+          ref={tokenOut}
+          // pair={pair}
           isPairExist={isPairExist}
           checkPairAndGetRate={checkPairAndGetRate}
           setBalanceOut={setBalanceOut}
-          shouldApproveButtonDisabled={shouldApproveButtonDisabled}
+          // shouldApproveButtonDisabled={shouldApproveButtonDisabled}
+          onTokenSelect={onTokenSelect}
         />
       </Row>
       <Row>
         <BoxInfo
           isInfo="true"
           rate={rate}
-          pair={pair}
+          // pair={pair}
+          tokenIn={tokenIn}
+          tokenOut={tokenOut}
           isPairExist={isPairExist}
           shareOfPool={shareOfPool}
         />
       </Row>
       <Row>
         {
-          !isPairExist &&
-          pair.current.addressTokenIn &&
-          pair.current.addressTokenOut ?
-            <div>
-              When creating a pair you are the first liquidity provider.
-              The ratio of tokens you add will set the price of this pool.
-              Once you are happy with the rate, click supply to review
-            </div> :
-            ''
+          !isPairExist && (
+            tokenIn.current
+            ? tokenIn.current.getTokenInfo()
+              ? true
+              : false
+            : false
+          ) && (
+            tokenOut.current
+            ? tokenOut.current.getTokenInfo()
+              ? true
+              : false
+            : false
+          ) ? (
+                <div>
+                  When creating a pair you are the first liquidity provider.
+                  The ratio of tokens you add will set the price of this pool.
+                  Once you are happy with the rate, click supply to review
+                </div>
+              )
+            : ''
         }
       </Row>
       <Row>
