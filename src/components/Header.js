@@ -53,7 +53,12 @@ export default function Header () {
     <Navbar bg="dark" variant="dark">
       <Container>
         <Nav className="m-auto">
-          <Nav.Link href="swap">Swap</Nav.Link>
+          {/* <Nav.Link href="swap">Swap</Nav.Link> */}
+          <Nav.Link>
+            <NavLink to='/swap'>
+              Swap
+            </NavLink>
+          </Nav.Link>
           {/* <Nav.Link href="provide-liquidity">Liquidity</Nav.Link> */}
           <NavDropdown title="Liquidity">
             {/* <NavDropdown.Item href="/provide-liquidity">Provide Liquidity</NavDropdown.Item>

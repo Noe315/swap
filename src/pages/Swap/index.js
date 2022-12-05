@@ -9,51 +9,167 @@ import ModalSlippage from '../../components/ModalSlippage';
 import { DEFAULT_SLIPPAGE } from '../../constants/address';
 
 export default function Swap () {
-  const [tokenIn, setTokenIn] = useState('KAI');
-  const [tokenOut, setTokenOut] = useState('USDC');
   const [isInfo, setIsInfo] = useState(false);
-  const [inputValue, setInputValue] = useState();
-  const [outputValue, setOutputValue] = useState();
-  const [disabled, setDisabled] = useState(true);
+  const [inputValueState, setInputValueState] = useState();
+  const [outputValueState, setOutputValueState] = useState();
+  const inputValue = useRef();
+  const outputValue = useRef();
   const [isModalSlippage, setIsModalSlippage] = useState(false);
   const slippageAndDeadline = useRef();
-  
-  const swapToken = () => {
-    setTokenIn(tokenOut);
-    setTokenOut(tokenIn);
-  };
+  const tokenIn = useRef();
+  const tokenOut = useRef();
+  const [disableSwap, setDisableSwap] = useState(true);
+  const [disableApprove, setDisableApprove] = useState(true);
+  const [isAddressSame, setIsAddressSame] = useState(false);
+  const isInputValid = useRef();
+  const isOutputValid = useRef();
 
   const inputOnChange = (event) => {
     const value = event.target.value;
-    if (value) {
-      setIsInfo(true);
-      setOutputValue(4);
-      setDisabled(false);
-    } else {
-      setIsInfo(false);
-      setOutputValue('');
-      setDisabled(true);
-    }
-    setInputValue();
+    const valueNumber = value.replace(/[^(0-9).]/gm, '');
+    inputValue.current = valueNumber;
+    checkInputAgainstBalance(valueNumber);
+    shouldApproveButtonDisabled();
+    setInputValueState(valueNumber);
+
+    // if (value) {
+    //   setIsInfo(true);
+    //   setOutputValue(4);
+    //   setDisabled(false);
+    // } else {
+    //   setIsInfo(false);
+    //   setOutputValue('');
+    //   setDisabled(true);
+    // }
+    // setInputValue();
   };
 
   const outputOnChange = (event) => {
     const value = event.target.value;
-    if (value) {
-      setIsInfo(true);
-      setInputValue(3);
-      setDisabled(false);
+    const valueNumber = value.replace(/[^(0-9).]/gm, '');
+    outputValue.current = valueNumber;
+    checkOutputAgainstBalance(valueNumber);
+    shouldApproveButtonDisabled();
+    setOutputValueState(valueNumber);
+    // if (value) {
+    //   setIsInfo(true);
+    //   setInputValue(3);
+    //   setDisabled(false);
+    // } else {
+    //   setIsInfo(false);
+    //   setInputValue('');
+    //   setDisabled(true);
+    // }
+    // setOutputValue();
+  }
+
+  const checkInputAgainstBalance = (value) => {
+    const infoTokenIn = tokenIn.current.getTokenInfo();
+
+    if (value > infoTokenIn.balance) {
+      isInputValid.current = false;
     } else {
-      setIsInfo(false);
-      setInputValue('');
-      setDisabled(true);
+      if (value > 0) {
+        isInputValid.current = true;
+      } else {
+        isInputValid.current = false;
+      }
     }
-    setOutputValue();
+  };
+
+  const checkOutputAgainstBalance = (value) => {
+    const infoTokenOut = tokenOut.current.getTokenInfo();
+    if (value > infoTokenOut.balance) {
+      isOutputValid.current = false;
+    } else {
+      if (value > 0) {
+        isOutputValid.current = true;
+      } else {
+        isOutputValid.current = false;
+      }
+    }
+  };
+
+  // const checkInputsAgainstBalance = (infoTokenIn, infoTokenOut) => {
+  //   // const infoTokenIn = tokenIn.current.getTokenInfo();
+  //   if (inputValue.current > infoTokenIn.balance) {
+  //     isInputValid.current = false;
+  //   } else {
+  //     isInputValid.current = true;
+  //   }
+  //   // const infoTokenOut = tokenOut.current.getTokenInfo();
+  //   if (outputValue.current > infoTokenOut.balance) {
+  //     isOutputValid.current = false;
+  //   } else {
+  //     isOutputValid.current = true;
+  //   }
+  // };
+
+  const shouldApproveButtonDisabled = () => {
+    const infoTokenOut = tokenOut.current.getTokenInfo();
+    const infoTokenIn = tokenIn.current.getTokenInfo();
+    // checkInputsAgainstBalance(infoTokenIn, infoTokenOut);
+    setDisableSwap(true);
+    console.log(
+      'isInputValid.current: ',
+      isInputValid.current,
+      ' isOutputValid.current: ',
+      isOutputValid.current,
+      ' inputValue.current: ',
+      inputValue.current,
+      ' outputValue.current: ',
+      outputValue.current,
+      ' infoTokenOut: ',
+      infoTokenOut,
+      ' infoTokenOut.balance: ',
+      infoTokenOut.balance,
+      ' infoTokenIn: ',
+      infoTokenIn,
+      ' outputValue.current > infoTokenOut.balance: ',
+      outputValue.current > infoTokenOut.balance,
+    );
+    if (isInputValid.current && isOutputValid.current && inputValue.current && outputValue.current) {
+    // if (isInputValid.current && isOutputValid.current && inputValue && outputValue) {
+      setDisableApprove(false);
+    } else {
+      setDisableApprove(true);
+    }
+    if (infoTokenIn.address === infoTokenOut.address) {
+      setDisableApprove(true);
+      setIsAddressSame(true);
+    } else {
+      if (isInputValid.current && isOutputValid.current && inputValue.current && outputValue.current) {
+      // if (isInputValid.current && isOutputValid.current && inputValue && outputValue) {
+        setDisableApprove(false);
+      }
+      setIsAddressSame(false);
+    }
+  };
+
+  const onTokenSelect = () => {
+    resetInputs();
+    const infoTokenIn = tokenIn.current.getTokenInfo();
+    const infoTokenOut = tokenOut.current.getTokenInfo();
+    if (infoTokenIn && infoTokenOut) {
+      if (infoTokenIn.address === infoTokenOut.address) {
+        setIsAddressSame(true);
+      } else {
+        setIsAddressSame(false);
+      }
+    }
+    // shouldApproveButtonDisabled();
+  };
+
+  const resetInputs = () => {
+    inputValue.current = '';
+    outputValue.current = '';
+    setInputValueState('');
+    setOutputValueState('');
+    shouldApproveButtonDisabled();
   }
 
   return (
     <BoxWrapper>
-      {/* <TableHeader ref={slippageAndDeadline} /> */}
       <TableHeader>
         <div>Swap</div>
         <ModalSlippage
@@ -77,10 +193,20 @@ export default function Swap () {
       </TableHeader>
       <Button onClick={
           () => console.log(
-            'slippageAndDeadline: ',
+            'slippage: ',
             slippageAndDeadline.current.getSlippage(),
-            ' ',
-            slippageAndDeadline.current.getDeadline()
+            ' deadline: ',
+            slippageAndDeadline.current.getDeadline(),
+            // ' pair: ',
+            // pair.current.getPair(),
+            ' tokenIn: ',
+            tokenIn.current.getTokenInfo(),
+            ' tokenOut: ',
+            tokenOut.current.getTokenInfo(),
+            ' disableApprove: ',
+            disableApprove,
+            ' inputValue: ',
+            inputValue,
           ) 
         }
       >
@@ -89,29 +215,39 @@ export default function Swap () {
       <Row>
         <BoxInput
           action='swap'
-          value={inputValue}
+          value={inputValueState}
           onChange={inputOnChange}
+          onTokenSelect={onTokenSelect}
           name='inputToken'
-          token={tokenIn}
+          ref={tokenIn}
         />
-      </Row>
-      <Row>
-        <Button onClick={swapToken}>⇅ Swap</Button>
       </Row>
       <Row>
         <BoxInput
           action='swap'
-          value={outputValue}
+          value={outputValueState}
           onChange={outputOnChange}
+          onTokenSelect={onTokenSelect}
           name='outputToken'
-          token={tokenOut}
+          ref={tokenOut}
         />
       </Row>
       <Row>
         <BoxInfo action='swap' isInfo={isInfo}/>
       </Row>
       <Row>
-        <Button disabled={disabled}>Swap</Button>
+        {
+          isAddressSame
+            ? <div style={{ color: 'red' }}>
+                Addresses of input token and output token are the same,
+                please use different addresses.
+              </div>
+            : ''
+        }
+      </Row>
+      <Row>
+        <Button disabled={disableApprove}>Approve</Button>
+        <Button disabled={disableSwap}>Swap</Button>
       </Row>
     </BoxWrapper>
   );

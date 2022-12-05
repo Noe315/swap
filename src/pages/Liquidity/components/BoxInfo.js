@@ -16,15 +16,15 @@ export default function BoxInfo (props) {
           toggleCurrency &&
           <div onClick={() => setToggleCurrency(!toggleCurrency)}>
               {
-                props.isPairExist ?
-                `1 ${props.pair.current.nameTokenIn} =
+                props.isPairExist
+                ? `1 ${props.tokenIn.current.getTokenInfo().name} =
                   ${Math.round(props.rate * 10000) / 10000}
-                  ${props.pair.current.nameTokenOut}` :
-                    props.rate ?
-                      `1 ${props.pair.current.nameTokenIn} =
-                        ${Math.round(props.rate * 10000) / 10000}
-                        ${props.pair.current.nameTokenOut}` :
-                          '1 undefined = undefined'
+                  ${props.tokenOut.current.getTokenInfo().name}`
+                : props.rate
+                  ? `1 ${props.tokenIn.current.getTokenInfo().name} =
+                    ${Math.round(props.rate * 10000) / 10000}
+                    ${props.tokenOut.current.getTokenInfo().name}`
+                  : '1 undefined = undefined'
               }
           </div>
         }
@@ -33,13 +33,13 @@ export default function BoxInfo (props) {
           <div onClick={() => setToggleCurrency(!toggleCurrency)}>
               {
                 props.isPairExist ?
-                  `1 ${props.pair.current.nameTokenOut} =
+                  `1 ${props.tokenOut.current.getTokenInfo().name} =
                     ${Math.round((1 / props.rate) * 10000) / 10000}
-                    ${props.pair.current.nameTokenIn}` :
+                    ${props.tokenIn.current.getTokenInfo().name}` :
                       props.rate ?
-                        `1 ${props.pair.current.nameTokenOut} =
+                        `1 ${props.tokenOut.current.getTokenInfo().name} =
                           ${Math.round((1 / props.rate) * 10000) / 10000}
-                          ${props.pair.current.nameTokenIn}` :
+                          ${props.tokenIn.current.getTokenInfo().name}` :
                             '1 undefined = undefined'
               }
           </div>
