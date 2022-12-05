@@ -135,7 +135,8 @@ export default function SelectToken (props) {
   // }
 
   const setToken = async (_tokenAddress, _tokenSymbol) => {
-    props.handleClose();
+    // props.handleClose();
+    handleCloseModal();
     // const info = await getBalance(_tokenAddress);
     if (props.name === 'inputToken') {
       // props.setPair({
@@ -179,7 +180,12 @@ export default function SelectToken (props) {
     // props.shouldApproveButtonDisabled();
     //   setIsInputExist(false);
     //   await props.setPair();
-  }
+  };
+
+  const handleCloseModal = () => {
+    props.handleClose();
+    setIsInputExist(false);
+  };
 
   return (
     <Modal show={props.show} onHide={props.handleClose}>
