@@ -26,3 +26,4 @@ export const DEFAULT_SLIPPAGE = 0.5;
 export const DEFAULT_DEADLINE = 30;
 export const KAI_MAINNET_CHAIN_ID = 24;
 // export const KAI_MAINNET_CHAIN_ID = '0x18';
+export const INIT_CODE_HASH = '0x5a23c534feedbf30bd19d7b9288954a647935ffa4d54127f71c14ef72e5e1d56';
