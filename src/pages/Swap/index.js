@@ -127,7 +127,7 @@ export default function Swap () {
           );
           tradeInfo.amountIn = trade[0].inputAmount.toFixed(
             trade[0].inputAmount.currency.decimals <= DECIMAL_PLACES
-              ? parseInt(trade[0].outputAmount.currency.decimals)
+              ? parseInt(trade[0].inputAmount.currency.decimals)
               : DECIMAL_PLACES
           );
           tradeInfo.rate = {
@@ -201,7 +201,7 @@ export default function Swap () {
           );
           tradeInfo.amountIn = trade[0].inputAmount.toFixed(
             trade[0].inputAmount.currency.decimals <= DECIMAL_PLACES
-              ? parseInt(trade[0].outputAmount.currency.decimals)
+              ? parseInt(trade[0].inputAmount.currency.decimals)
               : DECIMAL_PLACES
           );
           tradeInfo.rate = {
@@ -343,6 +343,7 @@ export default function Swap () {
     setInputValueState('');
     setOutputValueState('');
     shouldApproveButtonDisabled();
+    setIsInfo(false);
   }
 
   const findRoute = (type, value) => {
@@ -419,9 +420,9 @@ export default function Swap () {
     pairs[4] = pair4;
     pairs[5] = pair5;
 
-    // const trade = Trade.bestTradeExactIn(pairs, new TokenAmount(tokenB, '1000'), tokenB, { maxNumResults: 3, maxHops: 3 });
-    const trade = Trade
-          .bestTradeExactOut(pairs, tokenB, new TokenAmount(tokenA, '123000'), { maxNumResults: 4, maxHops: 4 });
+    const trade = Trade.bestTradeExactIn(pairs, new TokenAmount(tokenA, '1000'), tokenE, { maxNumResults: 3, maxHops: 3 });
+    // const trade = Trade
+    //       .bestTradeExactOut(pairs, tokenB, new TokenAmount(tokenA, '123000'), { maxNumResults: 4, maxHops: 4 });
     // const minReceive = trade[0].minimumAmountOut(new Percent('5', '1000')).toFixed(3);
     // const denominatorBN = new BN(trade[0].priceImpact.denominator).toString();
     // const priceImpact = trade[0].priceImpact.toFixed(2, { groupSeparator: ',' });
@@ -433,6 +434,9 @@ export default function Swap () {
     console.log(
       'pairs: ', pairs,
       ' trade: ', trade,
+      ' trade[0].outputAmount.toFixed(3): ', trade[0].outputAmount.toFixed(3),
+      ' trade[1].outputAmount.toFixed(3): ', trade[1].outputAmount.toFixed(3),
+      ' trade[2].outputAmount.toFixed(3): ', trade[2].outputAmount.toFixed(3),
       // ' denominatorBN: ', denominatorBN,
       // ' trade[0].priceImpact.denominator: ', JSON.stringify(trade[0].priceImpact.denominator),
       // ' trade[0].priceImpact.numerator: ', JSON.stringify(trade[0].priceImpact.numerator),
@@ -446,6 +450,53 @@ export default function Swap () {
       // ' minReceive: ', minReceive,
     );
   };
+
+  const approveTokens = async () => {
+    const infoTokenIn = tokenIn.current.getTokenInfo();
+    const infoTokenOut = tokenOut.current.getTokenInfo();
+    const _web3 = web3.current;
+    const _web3Data = web3Data.current;
+    const BN = _web3.utils.BN;
+
+    const contractTokenIn = new _web3.eth.Contract(Contracts.erc20.abi, infoTokenIn.address);
+    const contractTokenOut = new _web3.eth.Contract(Contracts.erc20.abi, infoTokenOut.address);
+
+    const amountInBN = new BN((inputValue.current * 10 ** infoTokenIn.decimals).toString())
+      .mul(new BN(10)
+      .pow(new BN(infoTokenIn.decimals)))
+      .div(new BN((10 ** infoTokenIn.decimals).toString()))
+      .toString();
+    const amountOutBN = new BN((outputValue.current * 10 ** infoTokenOut.decimals).toString())
+      .mul(new BN(10)
+      .pow(new BN(infoTokenOut.decimals)))
+      .div(new BN((10 ** infoTokenOut.decimals).toString()))
+      .toString();
+
+    // console.log('amountInRounded: ', amountInRounded, ' amountOutRounded: ', amountOutRounded);
+    console.log(
+      'amountInBN: ',
+      amountInBN,
+      ' amountOutBN: ',
+      amountOutBN,
+      ' amountInBN / (10 ** infoTokenIn.decimals): ',
+      amountInBN / (10 ** infoTokenIn.decimals),
+      ' amountOutBN / (10 ** infoTokenOut.decimals): ',
+      amountOutBN / (10 ** infoTokenOut.decimals)
+    );
+    
+    const transactionApproveTokenIn = await contractTokenIn.methods
+      .approve(Contracts.router.address, amountInBN)
+      .send({ from: _web3Data.address });
+    const transactionApproveTokenOut = await contractTokenOut.methods
+      .approve(Contracts.router.address, amountOutBN)
+      .send({ from: _web3Data.address });
+
+    if (transactionApproveTokenIn.status && transactionApproveTokenOut.status) {
+      setDisableSwap(false);
+    } else {
+      setDisableSwap(true);
+    }
+  }
 
   return (
     <BoxWrapper>
@@ -531,18 +582,18 @@ export default function Swap () {
         }
       </Row>
       <Row>
-        <Button disabled={disableApprove}>
+        <Button disabled={disableApprove} onClick={approveTokens}>Approve</Button>
+        <Button disabled={disableSwap}>
           {
             swapInfo.current
               ? swapInfo.current.priceImpact >= 15
                 ? 'Price impact too high'
                 : swapInfo.current.priceImpact >= 5
                   ? 'Swap anyway'
-                  : 'Approve'
-              : 'Approve'
+                  : 'Swap'
+              : 'Swap'
           }
         </Button>
-        <Button disabled={disableSwap}>Swap</Button>
       </Row>
     </BoxWrapper>
   );
