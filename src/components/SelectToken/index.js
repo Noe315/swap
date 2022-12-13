@@ -78,19 +78,30 @@
 //   );
 // }
 
-import React, { useState } from 'react';
+import React, { useEffect, useReducer, useRef, useState } from 'react';
 import Modal from 'react-bootstrap/Modal';
 import TokenList from './TokenList';
 import { Contracts } from '../../constants/address';
-import { getWeb3 } from '../../utils/connectWallet';
+import { getWeb3, getWeb3Data } from '../../utils/connectWallet';
 import { InputAddress, Invalid } from '../styles';
 
 export default function SelectToken (props) {
   const web3 = getWeb3();
+  const web3Data = useRef();
   const [isAddressValid, setIsAddressValid] = useState(false);
   const [tokenSymbol, setTokenSymbol] = useState();
+  const [tokenName, setTokenName] = useState();
   const [tokenAddress, setTokenAddress] = useState();
   const [isInputExist, setIsInputExist] = useState(false);
+
+  useEffect(() => {
+    const _getWeb3Data = async () => {
+      const _web3Data = await getWeb3Data();
+      web3Data.current = _web3Data;
+    };
+
+    _getWeb3Data();
+  }, []);
   
   const checkAddress = async (e) => {
     const addressValue = e.target.value;
@@ -104,13 +115,37 @@ export default function SelectToken (props) {
     if (_isAddressValid) {
       setIsAddressValid(true);
       const tokenContract = new web3.eth.Contract(Contracts.erc20.abi, addressValue);
-      const tokenName = await tokenContract.methods.symbol().call();
-      setTokenSymbol(tokenName);
+      
+      const _tokenName = await tokenContract.methods.name().call();
+      setTokenName(_tokenName);
+      
+      const _tokenSymbol = await tokenContract.methods.symbol().call();
+      setTokenSymbol(_tokenSymbol);
+      
       setTokenAddress(addressValue);
     } else {
       setIsAddressValid(false);
     }
   }
+
+  const getBalance = async (address) => {
+    const _web3Data = web3Data.current;
+    if (web3) {
+      const tokenContract = new web3.eth.Contract(Contracts.erc20.abi, address);
+      let _balance = await tokenContract.methods.balanceOf(_web3Data.address).call();
+      const decimals = await tokenContract.methods.decimals().call();
+      _balance = _balance / (10 ** decimals);
+      // setBalance(_balance);
+
+      // setTokenInfo(currentTokenInfo => {
+      //   currentTokenInfo.balance = _balance;
+      //   currentTokenInfo.decimal = decimals;
+      //   return currentTokenInfo;
+      // });
+
+      return {balance: _balance, decimals: decimals};
+    }
+  };
 
   // const setToken = async (_tokenAddress, _tokenSymbol) => {
   //   props.handleClose();
@@ -134,10 +169,11 @@ export default function SelectToken (props) {
   //   await props.setPair();
   // }
 
-  const setToken = async (_tokenAddress, _tokenSymbol) => {
+  const setToken = async (_tokenAddress, _tokenName, _tokenSymbol) => {
     // props.handleClose();
     handleCloseModal();
     // const info = await getBalance(_tokenAddress);
+    const info = await getBalance(_tokenAddress);
     if (props.name === 'inputToken') {
       // props.setPair({
       //   ...props.pair,
@@ -149,12 +185,12 @@ export default function SelectToken (props) {
       //   name: _tokenSymbol,
       //   address: _tokenAddress,
       // })
-
       await props.setToken({
-        name: _tokenSymbol,
+        name: _tokenName,
         address: _tokenAddress,
-        // balance: info.balance,
-        // decimal: info.decimal,
+        symbol: _tokenSymbol,
+        balance: info.balance,
+        decimals: info.decimals,
       });
     } else {
       // props.setPair({
@@ -169,10 +205,11 @@ export default function SelectToken (props) {
       // });
 
       await props.setToken({
-        name: _tokenSymbol,
+        name: _tokenName,
         address: _tokenAddress,
-        // balance: info.balance,
-        // decimal: info.decimal,
+        symbol: _tokenSymbol,
+        balance: info.balance,
+        decimals: info.decimals,
       });
     }
     props.token.current = _tokenSymbol;
@@ -203,6 +240,7 @@ export default function SelectToken (props) {
         <TokenList
           tokenAddress={tokenAddress}
           tokenSymbol={tokenSymbol}
+          tokenName={tokenName}
           isInputExist={isInputExist}
           setToken={setToken}
         />

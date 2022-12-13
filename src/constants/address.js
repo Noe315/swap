@@ -1,3 +1,4 @@
+import { ethers } from 'ethers';
 import { router, factory, erc20, uniswapV2Pair } from '../abis';
 
 export const Contracts = {
@@ -27,3 +28,10 @@ export const DEFAULT_DEADLINE = 30;
 export const KAI_MAINNET_CHAIN_ID = 24;
 // export const KAI_MAINNET_CHAIN_ID = '0x18';
 export const INIT_CODE_HASH = '0x5a23c534feedbf30bd19d7b9288954a647935ffa4d54127f71c14ef72e5e1d56';
+
+const network = {
+  name: 'KardiaChain',
+  chainId: KAI_MAINNET_CHAIN_ID,
+  _defaultProvider: (providers) => new providers.JsonRpcProvider('https://rpc.kardiachain.io')
+}
+export const PROVIDER = ethers.getDefaultProvider(network);
