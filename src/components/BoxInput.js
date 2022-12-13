@@ -145,18 +145,19 @@ const BoxInput = forwardRef((props, _ref) => {
   const [web3Data, setWeb3Data] = useState();
   const [balance, setBalance] = useState();
   const [isSelectToken, setIsSelectToken] = useState();
-  const [tokenInfo, setTokenInfo] = useState();
+  const [tokenInfoState, setTokenInfoState] = useState();
+  const tokenInfo = useRef();
 
   useEffect(() => {
     const _web3 = getWeb3();
     setWeb3(_web3);
     _getWeb3Data();
-    getBalance();
+    // getBalance();
   }, []);
 
   useImperativeHandle(_ref, () => ({
     getTokenInfo: () => {
-      return tokenInfo;
+      return tokenInfo.current;
     }
   }));
 
@@ -165,26 +166,26 @@ const BoxInput = forwardRef((props, _ref) => {
     setWeb3Data(_web3Data);
   }
 
-  const getBalance = async (address) => {
-    if (web3) {
-      const tokenContract = new web3.eth.Contract(Contracts.erc20.abi, address);
-      let _balance = await tokenContract.methods.balanceOf(web3Data.address).call();
-      const decimals = await tokenContract.methods.decimals().call();
-      _balance = _balance / (10 ** decimals);
-      setBalance(_balance);
+  // const getBalance = async (address) => {
+  //   if (web3) {
+  //     const tokenContract = new web3.eth.Contract(Contracts.erc20.abi, address);
+  //     let _balance = await tokenContract.methods.balanceOf(web3Data.address).call();
+  //     const decimals = await tokenContract.methods.decimals().call();
+  //     _balance = _balance / (10 ** decimals);
+  //     setBalance(_balance);
 
-      setTokenInfo(currentTokenInfo => {
-        currentTokenInfo.balance = _balance;
-        currentTokenInfo.decimal = decimals;
-        return currentTokenInfo;
-      });
-    }
-  };
+  //     setTokenInfo(currentTokenInfo => {
+  //       currentTokenInfo.balance = _balance;
+  //       currentTokenInfo.decimal = decimals;
+  //       return currentTokenInfo;
+  //     });
+  //   }
+  // };
 
   const setToken = async (_token) => {
-    setTokenInfo(_token);
-    console.log('_token: ', _token);
-    await getBalance(_token.address);
+    tokenInfo.current = _token;
+    setTokenInfoState(_token);
+    // await getBalance(_token.address);
     await props.onTokenSelect();
   }
 
@@ -196,7 +197,7 @@ const BoxInput = forwardRef((props, _ref) => {
       <SelectToken
         show={isSelectToken}
         handleClose={() => setIsSelectToken(false)}
-        setTokenInfo={setTokenInfo}
+        setTokenInfo={setTokenInfoState}
         setToken={setToken}
         token={token}
         name={props.name}
@@ -204,7 +205,8 @@ const BoxInput = forwardRef((props, _ref) => {
       <SwapBoxInputWrapper>
         <SwapBoxInput>
           <SwapBoxInputTitle>
-            <div>Balance: {balance ? balance : '0'}</div>
+            {/* <div>Balance: {balance ? balance : '0'}</div> */}
+            <div>Balance: {tokenInfo.current ? tokenInfo.current.balance : '0'}</div>
           </SwapBoxInputTitle>
 
           <SwapBoxInputArea>
@@ -218,7 +220,7 @@ const BoxInput = forwardRef((props, _ref) => {
               onClick={showSelectToken}
             >
               {/* {token.current ? token.current : 'Select Token'} */}
-              {tokenInfo ? tokenInfo.name : 'Select Token'}
+              {tokenInfo.current ? tokenInfo.current.symbol : 'Select Token'}
             </Button>
           </SwapBoxInputArea>
         </SwapBoxInput>

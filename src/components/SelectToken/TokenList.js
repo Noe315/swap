@@ -11,10 +11,10 @@ export default function TokenList (props) {
           as="button"
           action="true"
           onClick={
-            () => props.setToken(props.tokenAddress, props.tokenSymbol)
+            () => props.setToken(props.tokenAddress, props.tokenName, props.tokenSymbol)
           }
         >
-          <div>{props.tokenSymbol}</div>
+          <div>{props.tokenName}</div>
           <div>{props.tokenAddress}</div>
         </ListGroup.Item>
       </ListGroup>
@@ -29,7 +29,7 @@ export default function TokenList (props) {
             as="button"
             action="true"
             onClick={
-              () => props.setToken(token.address, token.name)
+              () => props.setToken(token.address, token.name, token.symbol)
             }
             key={token.address}
           >
