@@ -21,14 +21,14 @@ export default function BoxInfo (props) {
                 {
                   toggleCurrency ? (
                     <div onClick={() => setToggleCurrency(!toggleCurrency)}>
-                        1 {swapInfo.route[swapInfo.route.length - 1]} = {`${swapInfo.rate.inOverOut} ${swapInfo.route[0]}`}
+                        1 {swapInfo.route[swapInfo.route.length - 1].symbol} = {`${swapInfo.rate.inOverOut} ${swapInfo.route[0].symbol}`}
                     </div>
                   ) : ''
                 }
                 {
                   !toggleCurrency ? (
                     <div onClick={() => setToggleCurrency(!toggleCurrency)}>
-                        1 {swapInfo.route[0]} = {`${swapInfo.rate.outOverIn} ${swapInfo.route[swapInfo.route.length - 1]}`}
+                        1 {swapInfo.route[0].symbol} = {`${swapInfo.rate.outOverIn} ${swapInfo.route[swapInfo.route.length - 1].symbol}`}
                     </div>
                   ) : ''
                 }
@@ -40,7 +40,7 @@ export default function BoxInfo (props) {
                     <BoxInfoSwap>
                     <BoxInfoSwapRow>
                       <div>Expected Output</div>
-                      <div>{`${swapInfo.amountOut} ${swapInfo.route[swapInfo.route.length - 1]}`}</div>
+                      <div>{`${swapInfo.amountOut} ${swapInfo.route[swapInfo.route.length - 1].symbol}`}</div>
                     </BoxInfoSwapRow>
                     <BoxInfoSwapRow>
                       <div>Price Impact</div>
@@ -51,8 +51,8 @@ export default function BoxInfo (props) {
                       <div>
                         {
                           swapInfo.minOut
-                            ? `${swapInfo.minOut} ${swapInfo.route[swapInfo.route.length - 1]}`
-                            : `${swapInfo.maxIn} ${swapInfo.route[0]}`
+                            ? `${swapInfo.minOut} ${swapInfo.route[swapInfo.route.length - 1].symbol}`
+                            : `${swapInfo.maxIn} ${swapInfo.route[0].symbol}`
                         }
                       </div>
                       {/* <div>{`${swapInfo.minOut} ${swapInfo.route[swapInfo.route.length - 1]}`}</div> */}
@@ -66,7 +66,7 @@ export default function BoxInfo (props) {
                       <div>
                         {swapInfo.route.map((token, index) => {
                           return (
-                            <span key={token}>{index + 1 === swapInfo.route.length ? token : `${token} ->`} </span>
+                            <span key={token}>{index + 1 === swapInfo.route.length ? token.symbol : `${token.symbol} ->`} </span>
                           );
                         })}
                       </div>

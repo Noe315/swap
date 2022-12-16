@@ -118,7 +118,8 @@ export default function Swap () {
 
           tradeInfo.priceImpact = trade[0].priceImpact.toFixed(2);
           tradeInfo.route = trade[0].route.path.map(token => {
-            return token.symbol;
+            // return {symbol: token.symbol, address: token.address};
+            return token;
           });
           tradeInfo.amountOut = trade[0].outputAmount.toFixed(
             trade[0].outputAmount.currency.decimals <= DECIMAL_PLACES
@@ -131,8 +132,10 @@ export default function Swap () {
               : DECIMAL_PLACES
           );
           tradeInfo.rate = {
-            inOverOut: parseInt((tradeInfo.amountIn / tradeInfo.amountOut) * 10 ** infoTokenIn.decimals) / (10 ** infoTokenIn.decimals),
-            outOverIn: parseInt((tradeInfo.amountOut / tradeInfo.amountIn) * 10 ** infoTokenOut.decimals) / (10 ** infoTokenOut.decimals),
+            // inOverOut: parseInt((tradeInfo.amountIn / tradeInfo.amountOut) * 10 ** infoTokenIn.decimals) / (10 ** infoTokenIn.decimals),
+            // outOverIn: parseInt((tradeInfo.amountOut / tradeInfo.amountIn) * 10 ** infoTokenOut.decimals) / (10 ** infoTokenOut.decimals),
+            inOverOut: parseInt((tradeInfo.amountIn / tradeInfo.amountOut) * 10 ** 3) / (10 ** 3),
+            outOverIn: parseInt((tradeInfo.amountOut / tradeInfo.amountIn) * 10 ** 3) / (10 ** 3),
           };
           tradeInfo.minOut = trade[0]
             .minimumAmountOut(new Percent(
@@ -181,7 +184,7 @@ export default function Swap () {
     setOutputValueState(valueNumber);
 
     if (infoTokenIn && infoTokenOut) {
-      const trade = findRoute('out', valueNumber * 10 ** infoTokenIn.decimals);
+      const trade = findRoute('out', valueNumber * 10 ** infoTokenOut.decimals);
       let tradeInfo = {};
 
       if (valueNumber) {
@@ -192,7 +195,8 @@ export default function Swap () {
 
           tradeInfo.priceImpact = trade[0].priceImpact.toFixed(2);
           tradeInfo.route = trade[0].route.path.map(token => {
-            return token.symbol;
+            // return token.symbol;
+            return token;
           });
           tradeInfo.amountOut = trade[0].outputAmount.toFixed(
             trade[0].outputAmount.currency.decimals <= DECIMAL_PLACES
@@ -205,8 +209,10 @@ export default function Swap () {
               : DECIMAL_PLACES
           );
           tradeInfo.rate = {
-            inOverOut: parseInt((tradeInfo.amountIn / tradeInfo.amountOut) * 10 ** infoTokenIn.decimals) / (10 ** infoTokenIn.decimals),
-            outOverIn: parseInt((tradeInfo.amountOut / tradeInfo.amountIn) * 10 ** infoTokenOut.decimals) / (10 ** infoTokenOut.decimals),
+            // inOverOut: parseInt((tradeInfo.amountIn / tradeInfo.amountOut) * 10 ** infoTokenIn.decimals) / (10 ** infoTokenIn.decimals),
+            // outOverIn: parseInt((tradeInfo.amountOut / tradeInfo.amountIn) * 10 ** infoTokenOut.decimals) / (10 ** infoTokenOut.decimals),
+            inOverOut: parseInt((tradeInfo.amountIn / tradeInfo.amountOut) * 10 ** 3) / (10 ** 3),
+            outOverIn: parseInt((tradeInfo.amountOut / tradeInfo.amountIn) * 10 ** 3) / (10 ** 3),
           };
           tradeInfo.maxIn = trade[0]
             .maximumAmountIn(new Percent(
@@ -225,7 +231,7 @@ export default function Swap () {
           // setSwapInfo(tradeInfo);
           swapInfo.current = tradeInfo;
 
-          setInputValueState(tradeInfo.maxIn);
+          setInputValueState(tradeInfo.amountIn);
           inputValue.current = tradeInfo.amountIn;
         } else {
           setIsRouteExist(false);
@@ -434,9 +440,9 @@ export default function Swap () {
     console.log(
       'pairs: ', pairs,
       ' trade: ', trade,
-      ' trade[0].outputAmount.toFixed(3): ', trade[0].outputAmount.toFixed(3),
-      ' trade[1].outputAmount.toFixed(3): ', trade[1].outputAmount.toFixed(3),
-      ' trade[2].outputAmount.toFixed(3): ', trade[2].outputAmount.toFixed(3),
+      // ' trade[0].outputAmount.toFixed(3): ', trade[0].outputAmount.toFixed(3),
+      // ' trade[1].outputAmount.toFixed(3): ', trade[1].outputAmount.toFixed(3),
+      // ' trade[2].outputAmount.toFixed(3): ', trade[2].outputAmount.toFixed(3),
       // ' denominatorBN: ', denominatorBN,
       // ' trade[0].priceImpact.denominator: ', JSON.stringify(trade[0].priceImpact.denominator),
       // ' trade[0].priceImpact.numerator: ', JSON.stringify(trade[0].priceImpact.numerator),
@@ -497,6 +503,77 @@ export default function Swap () {
       setDisableSwap(true);
     }
   }
+
+  const swap = async () => {
+    const _web3 = web3.current;
+    const _web3Data = web3Data.current;
+    const BN = _web3.utils.BN;
+    const _swapInfo = swapInfo.current;
+    const routerContract = _web3Data.contracts.router;
+    console.log('_swapInfo: ', _swapInfo);
+    
+    const path = _swapInfo.route.map(token => {
+      return token.address;
+    });
+    const to = _web3Data.address;
+    const deadline = (Date.parse(new Date()) / 1000) + (60 * slippageAndDeadline.current.getDeadline());
+
+    // Exact in
+    const amountIn = (_swapInfo.amountIn * 10 ** _swapInfo.route[0].decimals).toString();
+    const amountInBN = new BN(amountIn).toString();
+
+    const amountOutMin =
+      _swapInfo && _swapInfo.minOut
+        ? (_swapInfo.minOut * 10 ** _swapInfo.route[_swapInfo.route.length - 1].decimals).toString()
+        : '';
+    const amountOutMinBN = amountOutMin ? new BN(amountOutMin).toString() : '';
+
+    // Exact out
+    const amountOut = (_swapInfo.amountOut * 10 ** _swapInfo.route[_swapInfo.route.length - 1].decimals).toString();
+    const amountOutBN = new BN(amountOut).toString();
+
+    const amountInMax =
+      _swapInfo && _swapInfo.maxIn
+        ? (_swapInfo.maxIn * 10 ** _swapInfo.route[0].decimals).toString()
+        : '';
+    const amountInMaxBN = new BN(amountInMax).toString();
+    
+    console.log(
+      'amountIn: ', amountIn,
+      ' amountOutMin: ', amountOutMin,
+      ' path: ', path,
+      ' to: ', to,
+      ' deadline: ', deadline,
+      ' amountInBN: ', amountInBN,
+      ' amountOutMinBN: ', amountOutMinBN,
+      ' amountOutBN: ', amountOutBN,
+      ' amountInMaxBN: ', amountInMaxBN,
+    );
+    if (_swapInfo && _swapInfo.minOut) {
+      // swapExactTokensForTokens
+      const txSwapExactTokensForTokens = await routerContract.methods
+        .swapExactTokensForTokens(
+          amountInBN,
+          amountOutMinBN,
+          path,
+          to,
+          deadline,
+        )
+        .send({ from: _web3Data.address });
+      console.log('txSwapExactTokensForTokens: ', txSwapExactTokensForTokens);
+    } else if (_swapInfo && _swapInfo.maxIn) {
+      const txSwapTokensForExactTokens = await routerContract.methods
+        .swapTokensForExactTokens(
+          amountOutBN,
+          amountInMaxBN,
+          path,
+          to,
+          deadline,
+        )
+        .send({ from : _web3Data.address });
+      console.log('txSwapTokensForExactTokens: ', txSwapTokensForExactTokens);
+    }
+  };
 
   return (
     <BoxWrapper>
@@ -583,7 +660,10 @@ export default function Swap () {
       </Row>
       <Row>
         <Button disabled={disableApprove} onClick={approveTokens}>Approve</Button>
-        <Button disabled={disableSwap}>
+        <Button
+          // disabled={disableSwap}
+          onClick={swap}
+        >
           {
             swapInfo.current
               ? swapInfo.current.priceImpact >= 15
