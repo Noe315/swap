@@ -5,7 +5,7 @@ import BoxInput from '../../components/BoxInput';
 import BoxWrapper from '../../components/BoxWrapper'
 import BoxInfo from './components/BoxInfo';
 import { getAccounts, getWeb3, loadSmartContracts } from '../../utils/connectWallet';
-import { Contracts, DECIMAL_PLACES, DEFAULT_SLIPPAGE } from '../../constants/address';
+import { Contracts, DECIMAL_PLACES, DEFAULT_SLIPPAGE, NATIVE_TOKEN_ADDRESS, NATIVE_TOKEN_DECIMAL } from '../../constants/address';
 import { TableHeader } from '../../components/styles';
 import ModalSlippage from '../../components/ModalSlippage';
 
@@ -26,8 +26,8 @@ export default function Liquidity () {
   // const pair = useRef();
   const [address, setAddress] = useState();
   const [contracts, setContracts] = useState();
-  const [balanceIn, setBalanceIn] = useState();
-  const [balanceOut, setBalanceOut] = useState();
+  // const [balanceIn, setBalanceIn] = useState();
+  // const [balanceOut, setBalanceOut] = useState();
   const [inputValueState, setInputValueState] = useState();
   const [outputValueState, setOutputValueState] = useState();
   const [disableProvide, setDisableProvide] = useState(true);
@@ -59,18 +59,26 @@ export default function Liquidity () {
     setAddress(addresses[0]);
   };
 
+  // const sanitizeInput = (value) => {
+  //   const sanitized = value.replace(/[^0-9(\.)]/g, '');
+  //   return sanitized;
+  // }
+
   const inputOnChange = async (event) => {
-    const infoTokenIn = tokenIn.current.getTokenInfo();
-    const infoTokenOut = tokenOut.current.getTokenInfo();
+    // const infoTokenIn = tokenIn.current.getTokenInfo();
+    // const infoTokenOut = tokenOut.current.getTokenInfo();
+    const infoTokenIn = tokenIn.current.getTokenInfo() ? tokenIn.current.getTokenInfo() : tokenIn.current.getNativeTokenInfo();
+    const infoTokenOut = tokenOut.current.getTokenInfo() ? tokenOut.current.getTokenInfo() : tokenOut.current.getNativeTokenInfo();
     const value = event.target.value;
+    // const valueSanitized = sanitizeInput(value);
     checkInputAgainstBalance(value);
 
     // if (pair.current.addressTokenIn && pair.current.addressTokenOut) {
     if (infoTokenIn && infoTokenOut) {
       if (isPairExist) {
         if (value) {
-          const tokenInDecimal = await contractTokenIn.methods.decimals().call();
-          const tokenOutDecimal = await contractTokenOut.methods.decimals().call();
+          const tokenInDecimal = infoTokenIn.address ? await contractTokenIn.methods.decimals().call() : NATIVE_TOKEN_DECIMAL;
+          const tokenOutDecimal = infoTokenOut.address ? await contractTokenOut.methods.decimals().call() : NATIVE_TOKEN_DECIMAL;
           
           const amountInWithDecimal = value * 10 ** tokenInDecimal;
           const amountInPercentage = amountInWithDecimal / (poolBalanceTokenIn + amountInWithDecimal);
@@ -101,6 +109,7 @@ export default function Liquidity () {
       } else {
         if (value) {
           inputValue.current = value;
+          // inputValue.current = valueSanitized;
           getRateWhenPairNotExist();
           setShareOfPool(100);
         } else {
@@ -112,11 +121,14 @@ export default function Liquidity () {
       shouldApproveButtonDisabled();
     }
     setInputValueState(value);
+    // setInputValueState(valueSanitized);
   };
 
   const outputOnChange = async (event) => {
-    const infoTokenIn = tokenIn.current.getTokenInfo();
-    const infoTokenOut = tokenOut.current.getTokenInfo();
+    // const infoTokenIn = tokenIn.current.getTokenInfo();
+    // const infoTokenOut = tokenOut.current.getTokenInfo();
+    const infoTokenIn = tokenIn.current.getTokenInfo() ? tokenIn.current.getTokenInfo() : tokenIn.current.getNativeTokenInfo();
+    const infoTokenOut = tokenOut.current.getTokenInfo() ? tokenOut.current.getTokenInfo() : tokenOut.current.getNativeTokenInfo();
     const value = event.target.value;
     checkOutputAgainstBalance(value);
 
@@ -124,8 +136,10 @@ export default function Liquidity () {
     if (infoTokenIn && infoTokenOut) {
       if (isPairExist) {
         if (value) {
-          const tokenOutDecimal = await contractTokenOut.methods.decimals().call();
-          const tokenInDecimal = await contractTokenIn.methods.decimals().call();
+          // const tokenOutDecimal = await contractTokenOut.methods.decimals().call();
+          // const tokenInDecimal = await contractTokenIn.methods.decimals().call();
+          const tokenInDecimal = infoTokenIn.address ? await contractTokenIn.methods.decimals().call() : NATIVE_TOKEN_DECIMAL;
+          const tokenOutDecimal = infoTokenOut.address ? await contractTokenOut.methods.decimals().call() : NATIVE_TOKEN_DECIMAL;
           
           const amountOutWithDecimal = value * 10 ** tokenOutDecimal;
           const amountOutPercentage = amountOutWithDecimal / (poolBalanceTokenOut + amountOutWithDecimal);
@@ -170,40 +184,53 @@ export default function Liquidity () {
   }
 
   const checkInputAgainstBalance = (value) => {
-    if (value > balanceIn) {
-      isInputValid.current = false;
-    } else {
-      if (value > 0) {
-        isInputValid.current = true;
-      } else {
+    const infoTokenIn = tokenIn.current.getTokenInfo() ? tokenIn.current.getTokenInfo() : tokenIn.current.getNativeTokenInfo();
+    if (infoTokenIn) {
+      // if (value > balanceIn) {
+      if (value > infoTokenIn.balance) {
         isInputValid.current = false;
+      } else {
+        if (value > 0) {
+          isInputValid.current = true;
+        } else {
+          isInputValid.current = false;
+        }
       }
     }
   };
 
   const checkOutputAgainstBalance = (value) => {
-    if (value > balanceOut) {
-      isOutputValid.current = false;
-    } else {
-      if (value > 0) {
-        isOutputValid.current = true;
-      } else {
+    const infoTokenOut = tokenOut.current.getTokenInfo() ? tokenOut.current.getTokenInfo() : tokenOut.current.getNativeTokenInfo();
+    if (infoTokenOut) {
+      // if (value > balanceOut) {
+      if (value > infoTokenOut.balance) {
         isOutputValid.current = false;
+      } else {
+        if (value > 0) {
+          isOutputValid.current = true;
+        } else {
+          isOutputValid.current = false;
+        }
       }
     }
   };
 
   const shouldApproveButtonDisabled = () => {
-    const infoTokenIn = tokenIn.current.getTokenInfo();
-    const infoTokenOut = tokenOut.current.getTokenInfo();
+    // const infoTokenIn = tokenIn.current.getTokenInfo();
+    // const infoTokenOut = tokenOut.current.getTokenInfo();
+    const infoTokenIn = tokenIn.current.getTokenInfo() ? tokenIn.current.getTokenInfo() : tokenIn.current.getNativeTokenInfo();
+    const infoTokenOut = tokenOut.current.getTokenInfo() ? tokenOut.current.getTokenInfo() : tokenOut.current.getNativeTokenInfo();
     setDisableProvide(true);
     if (isInputValid.current && isOutputValid.current && inputValue.current && outputValue.current) {
       setDisableApprove(false);
     } else {
       setDisableApprove(true);
     }
+    const addressIn = infoTokenIn.address ? infoTokenIn.address : NATIVE_TOKEN_ADDRESS;
+    const addressOut = infoTokenOut.address ? infoTokenOut.address : NATIVE_TOKEN_ADDRESS;
     // if (pair.current.addressTokenIn === pair.current.addressTokenOut) {
-    if (infoTokenIn.address === infoTokenOut.address) {
+    // if (infoTokenIn.address === infoTokenOut.address) {
+    if (addressIn === addressOut) {
       setDisableApprove(true);
       setIsAddressSame(true);
     } else {
@@ -215,8 +242,10 @@ export default function Liquidity () {
   };
   
   const checkPairAndGetRate = async () => {
-    const infoTokenIn = tokenIn.current.getTokenInfo();
-    const infoTokenOut = tokenOut.current.getTokenInfo();
+    // const infoTokenIn = tokenIn.current.getTokenInfo();
+    // const infoTokenOut = tokenOut.current.getTokenInfo();
+    const infoTokenIn = tokenIn.current.getTokenInfo() ? tokenIn.current.getTokenInfo() : tokenIn.current.getNativeTokenInfo();
+    const infoTokenOut = tokenOut.current.getTokenInfo() ? tokenOut.current.getTokenInfo() : tokenOut.current.getNativeTokenInfo();
     // if (
     //   pair.current.addressTokenIn &&
     //   pair.current.addressTokenOut &&
@@ -238,13 +267,15 @@ export default function Liquidity () {
   }
   
   const checkPairExist = async () => {
-    const infoTokenIn = tokenIn.current.getTokenInfo();
-    const infoTokenOut = tokenOut.current.getTokenInfo();
+    // const infoTokenIn = tokenIn.current.getTokenInfo();
+    // const infoTokenOut = tokenOut.current.getTokenInfo();
+    const infoTokenIn = tokenIn.current.getTokenInfo() ? tokenIn.current.getTokenInfo() : tokenIn.current.getNativeTokenInfo();
+    const infoTokenOut = tokenOut.current.getTokenInfo() ? tokenOut.current.getTokenInfo() : tokenOut.current.getNativeTokenInfo();
     const _pair = await contracts.factory.methods.getPair(
       // pair.current.addressTokenIn,
       // pair.current.addressTokenOut,
-      infoTokenIn.address,
-      infoTokenOut.address,
+      infoTokenIn.address ? infoTokenIn.address : NATIVE_TOKEN_ADDRESS,
+      infoTokenOut.address ? infoTokenOut.address : NATIVE_TOKEN_ADDRESS,
     ).call();
     const pair1Int = parseInt(_pair, 16);
     if (pair1Int === 0) {
@@ -258,13 +289,21 @@ export default function Liquidity () {
   };
 
   const getRate = async () => {
-    const infoTokenIn = tokenIn.current.getTokenInfo();
-    const infoTokenOut = tokenOut.current.getTokenInfo();
+    // const infoTokenIn = tokenIn.current.getTokenInfo();
+    // const infoTokenOut = tokenOut.current.getTokenInfo();
+    const infoTokenIn = tokenIn.current.getTokenInfo() ? tokenIn.current.getTokenInfo() : tokenIn.current.getNativeTokenInfo();
+    const infoTokenOut = tokenOut.current.getTokenInfo() ? tokenOut.current.getTokenInfo() : tokenOut.current.getNativeTokenInfo();
     if (web3) {
       // const _contractTokenIn = new web3.eth.Contract(Contracts.erc20.abi, pair.current.addressTokenIn);
       // const _contractTokenOut = new web3.eth.Contract(Contracts.erc20.abi, pair.current.addressTokenOut);
-      const _contractTokenIn = new web3.eth.Contract(Contracts.erc20.abi, infoTokenIn.address);
-      const _contractTokenOut = new web3.eth.Contract(Contracts.erc20.abi, infoTokenOut.address);
+      const _contractTokenIn = new web3.eth.Contract(
+        Contracts.erc20.abi,
+        infoTokenIn.address ? infoTokenIn.address : NATIVE_TOKEN_ADDRESS,
+      );
+      const _contractTokenOut = new web3.eth.Contract(
+        Contracts.erc20.abi,
+        infoTokenOut.address ? infoTokenOut.address : NATIVE_TOKEN_ADDRESS,
+      );
       setContractTokenIn(_contractTokenIn);
       setContractTokenOut(_contractTokenOut);
 
@@ -288,8 +327,10 @@ export default function Liquidity () {
   };
 
   const getRateWhenPairNotExist = () => {
-    const infoTokenIn = tokenIn.current.getTokenInfo();
-    const infoTokenOut = tokenOut.current.getTokenInfo();
+    // const infoTokenIn = tokenIn.current.getTokenInfo();
+    // const infoTokenOut = tokenOut.current.getTokenInfo();
+    const infoTokenIn = tokenIn.current.getTokenInfo() ? tokenIn.current.getTokenInfo() : tokenIn.current.getNativeTokenInfo();
+    const infoTokenOut = tokenOut.current.getTokenInfo() ? tokenOut.current.getTokenInfo() : tokenOut.current.getNativeTokenInfo();
     // if (pair.current.addressTokenIn && pair.current.addressTokenOut) {
     if (infoTokenIn && infoTokenOut) {
       const _rate = inputValue.current / outputValue.current;
@@ -305,8 +346,16 @@ export default function Liquidity () {
 
   const approveTokens = async () => {
     const BN = web3.utils.BN;
-    const tokenInDecimal = await contractTokenIn.methods.decimals().call();
-    const tokenOutDecimal = await contractTokenOut.methods.decimals().call();
+    const infoTokenIn = tokenIn.current.getTokenInfo() ? tokenIn.current.getTokenInfo() : tokenIn.current.getNativeTokenInfo();
+    const infoTokenOut = tokenOut.current.getTokenInfo() ? tokenOut.current.getTokenInfo() : tokenOut.current.getNativeTokenInfo();
+    console.log(
+      'infoTokenIn: ', infoTokenIn,
+      ' infoTokenOut: ', infoTokenOut,
+    );
+    // const tokenInDecimal = await contractTokenIn.methods.decimals().call();
+    // const tokenOutDecimal = await contractTokenOut.methods.decimals().call();
+    const tokenInDecimal = infoTokenIn.address ? await contractTokenIn.methods.decimals().call() : NATIVE_TOKEN_DECIMAL;
+    const tokenOutDecimal = infoTokenOut.address ? await contractTokenOut.methods.decimals().call() : NATIVE_TOKEN_DECIMAL;
 
     // const amountInRounded = Math.round(inputValue.current * 10 ** tokenInDecimal);
     // const amountOutRounded = Math.round(outputValue.current * 10 ** tokenOutDecimal);
@@ -321,7 +370,6 @@ export default function Liquidity () {
       .div(new BN((10 ** tokenOutDecimal).toString()))
       .toString();
 
-    // console.log('amountInRounded: ', amountInRounded, ' amountOutRounded: ', amountOutRounded);
     console.log(
       'amountInBN: ',
       amountInBN,
@@ -332,31 +380,72 @@ export default function Liquidity () {
       ' amountOutBN / (10 ** tokenOutDecimal): ',
       amountOutBN / (10 ** tokenOutDecimal)
     );
-    
-    const transactionApproveTokenIn = await contractTokenIn.methods
-      // .approve(Contracts.router.address, amountInRounded)
-      // .approve(Contracts.router.address, new BN((amountInBN / (10 ** tokenInDecimal)).toString()))
-      .approve(Contracts.router.address, amountInBN)
-      .send({ from: address});
-    const transactionApproveTokenOut = await contractTokenOut.methods
-      // .approve(Contracts.router.address, amountOutRounded)
-      // .approve(Contracts.router.address, new BN((amountOutBN / (10 ** tokenOutDecimal)).toString()))
-      .approve(Contracts.router.address, amountOutBN)
-      .send({ from: address});
 
-    if (transactionApproveTokenIn.status && transactionApproveTokenOut.status) {
-      setDisableProvide(false);
-    } else {
-      setDisableProvide(true);
+    let txApproveTokenIn, txApproveTokenOut;
+
+    if (infoTokenIn.address && infoTokenOut.address) {
+      txApproveTokenIn = await contractTokenIn.methods
+        .approve(Contracts.router.address, amountInBN)
+        .send({ from: address});
+      txApproveTokenOut = await contractTokenOut.methods
+        .approve(Contracts.router.address, amountOutBN)
+        .send({ from: address});
+
+      if (txApproveTokenIn.status && txApproveTokenOut.status) {
+        setDisableProvide(false);
+      } else {
+        setDisableProvide(true);
+      }
+    } else if (infoTokenIn.address && !infoTokenOut.address) {
+      txApproveTokenIn = await contractTokenIn.methods
+        .approve(Contracts.router.address, amountInBN)
+        .send({ from: address});
+      
+      if (txApproveTokenIn.status) {
+        setDisableProvide(false);
+      } else {
+        setDisableProvide(true);
+      }
+    } else if (!infoTokenIn.address && infoTokenOut.address) {
+      txApproveTokenOut = await contractTokenOut.methods
+        .approve(Contracts.router.address, amountOutBN)
+        .send({ from: address});
+
+      if (txApproveTokenOut.status) {
+        setDisableProvide(false);
+      } else {
+        setDisableProvide(true);
+      }
     }
+    
+    // const transactionApproveTokenIn = await contractTokenIn.methods
+    //   // .approve(Contracts.router.address, amountInRounded)
+    //   // .approve(Contracts.router.address, new BN((amountInBN / (10 ** tokenInDecimal)).toString()))
+    //   .approve(Contracts.router.address, amountInBN)
+    //   .send({ from: address});
+    // const transactionApproveTokenOut = await contractTokenOut.methods
+    //   // .approve(Contracts.router.address, amountOutRounded)
+    //   // .approve(Contracts.router.address, new BN((amountOutBN / (10 ** tokenOutDecimal)).toString()))
+    //   .approve(Contracts.router.address, amountOutBN)
+    //   .send({ from: address});
+
+    // if (transactionApproveTokenIn.status && transactionApproveTokenOut.status) {
+    //   setDisableProvide(false);
+    // } else {
+    //   setDisableProvide(true);
+    // }
   }
 
   const provide = async () => {
-    const infoTokenIn = tokenIn.current.getTokenInfo();
-    const infoTokenOut = tokenOut.current.getTokenInfo();
+    // const infoTokenIn = tokenIn.current.getTokenInfo();
+    // const infoTokenOut = tokenOut.current.getTokenInfo();
+    const infoTokenIn = tokenIn.current.getTokenInfo() ? tokenIn.current.getTokenInfo() : tokenIn.current.getNativeTokenInfo();
+    const infoTokenOut = tokenOut.current.getTokenInfo() ? tokenOut.current.getTokenInfo() : tokenOut.current.getNativeTokenInfo();
     const BN = web3.utils.BN;
-    const tokenInDecimal = await contractTokenIn.methods.decimals().call();
-    const tokenOutDecimal = await contractTokenOut.methods.decimals().call();
+    // const tokenInDecimal = await contractTokenIn.methods.decimals().call();
+    // const tokenOutDecimal = await contractTokenOut.methods.decimals().call();
+    const tokenInDecimal = infoTokenIn.address ? await contractTokenIn.methods.decimals().call() : NATIVE_TOKEN_DECIMAL;
+    const tokenOutDecimal = infoTokenOut.address ? await contractTokenOut.methods.decimals().call() : NATIVE_TOKEN_DECIMAL;
     const _slippage = slippageAndDeadline.current.getSlippage();
 
     // const amountInRounded = Math.round(inputValue.current * 10 ** tokenInDecimal);
@@ -395,31 +484,87 @@ export default function Liquidity () {
       _slippage * 10000,
     );
 
-    await contracts.router.methods.addLiquidity(
-      // pair.current.addressTokenIn,
-      // pair.current.addressTokenOut,
-      infoTokenIn.address,
-      infoTokenOut.address,
-      // amountInRounded,
-      // amountOutRounded,
-      // amountInRounded * (1 - slippage),
-      // amountOutRounded * (1 - slippage),
-      amountIn,
-      amountOut,
-      amountInMin,
-      amountOutMin,
-      address,
-      deadline
-    ).send({ from: address });
+    if (infoTokenIn.address && infoTokenOut.address) {
+      await contracts.router.methods.addLiquidity(
+        // pair.current.addressTokenIn,
+        // pair.current.addressTokenOut,
+        infoTokenIn.address,
+        infoTokenOut.address,
+        // amountInRounded,
+        // amountOutRounded,
+        // amountInRounded * (1 - slippage),
+        // amountOutRounded * (1 - slippage),
+        amountIn,
+        amountOut,
+        amountInMin,
+        amountOutMin,
+        address,
+        deadline
+      ).send({ from: address });
+    } else if (infoTokenIn.address && !infoTokenOut.address) {
+      console.log(
+        'infoTokenIn.address: ', infoTokenIn.address,
+        ' amountIn: ', amountIn,
+        ' amountInMin: ', amountInMin,
+        ' amountOut: ', amountOut,
+        ' amountOutMin: ', amountOutMin,
+      );
+      await contracts.router.methods.addLiquidityETH(
+        infoTokenIn.address,
+        amountIn,
+        amountInMin,
+        amountOutMin,
+        address,
+        deadline,
+      )
+      .send({ from: address, value: amountOut });
+    } else if (!infoTokenIn.address && infoTokenOut.address) {
+      console.log(
+        'infoTokenOut.address: ', infoTokenOut.address,
+        ' amountIn: ', amountIn,
+        ' amountInMin: ', amountInMin,
+        ' amountOut: ', amountOut,
+        ' amountOutMin: ', amountOutMin,
+      );
+      await contracts.router.methods.addLiquidityETH(
+        infoTokenOut.address,
+        amountOut,
+        amountOutMin,
+        amountInMin,
+        address,
+        deadline,
+      )
+      .send({ from: address, value: amountIn });
+    }
+
+    // await contracts.router.methods.addLiquidity(
+    //   // pair.current.addressTokenIn,
+    //   // pair.current.addressTokenOut,
+    //   infoTokenIn.address,
+    //   infoTokenOut.address,
+    //   // amountInRounded,
+    //   // amountOutRounded,
+    //   // amountInRounded * (1 - slippage),
+    //   // amountOutRounded * (1 - slippage),
+    //   amountIn,
+    //   amountOut,
+    //   amountInMin,
+    //   amountOutMin,
+    //   address,
+    //   deadline
+    // ).send({ from: address });
   }
 
   const onTokenSelect = async () => {
     resetInputs();
-    const infoTokenIn = tokenIn.current.getTokenInfo();
-    const infoTokenOut = tokenOut.current.getTokenInfo();
+    const infoTokenIn = tokenIn.current.getTokenInfo() ? tokenIn.current.getTokenInfo() : tokenIn.current.getNativeTokenInfo();
+    const infoTokenOut = tokenOut.current.getTokenInfo() ? tokenOut.current.getTokenInfo() : tokenOut.current.getNativeTokenInfo();
     if (infoTokenIn && infoTokenOut) {
       await checkPairAndGetRate();
-      if (infoTokenIn.address === infoTokenOut.address) {
+      const addressIn = infoTokenIn.address ? infoTokenIn.address : NATIVE_TOKEN_ADDRESS;
+      const addressOut = infoTokenOut.address ? infoTokenOut.address : NATIVE_TOKEN_ADDRESS;
+      // if (infoTokenIn.address === infoTokenOut.address) {
+      if (addressIn === addressOut) {
         setIsAddressSame(true);
       } else {
         setIsAddressSame(false);
@@ -499,8 +644,8 @@ export default function Liquidity () {
           ref={tokenIn}
           // pair={pair}
           isPairExist={isPairExist}
-          checkPairAndGetRate={checkPairAndGetRate}
-          setBalanceIn={setBalanceIn}
+          // checkPairAndGetRate={checkPairAndGetRate}
+          // setBalanceIn={setBalanceIn}
           // shouldApproveButtonDisabled={shouldApproveButtonDisabled}
           onTokenSelect={onTokenSelect}
         />
@@ -516,8 +661,8 @@ export default function Liquidity () {
           ref={tokenOut}
           // pair={pair}
           isPairExist={isPairExist}
-          checkPairAndGetRate={checkPairAndGetRate}
-          setBalanceOut={setBalanceOut}
+          // checkPairAndGetRate={checkPairAndGetRate}
+          // setBalanceOut={setBalanceOut}
           // shouldApproveButtonDisabled={shouldApproveButtonDisabled}
           onTokenSelect={onTokenSelect}
         />
@@ -539,13 +684,17 @@ export default function Liquidity () {
             tokenIn.current
             ? tokenIn.current.getTokenInfo()
               ? true
-              : false
+              : tokenIn.current.getNativeTokenInfo()
+                ? true
+                : false
             : false
           ) && (
             tokenOut.current
             ? tokenOut.current.getTokenInfo()
               ? true
-              : false
+              : tokenOut.current.getNativeTokenInfo()
+                ? true
+                : false
             : false
           ) ? (
                 <div>
