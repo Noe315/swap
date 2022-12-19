@@ -6,9 +6,9 @@ import BoxInfo from './components/BoxInfo';
 import BoxWrapper from '../../components/BoxWrapper';
 import { TableHeader } from '../../components/styles';
 import ModalSlippage from '../../components/ModalSlippage';
-import { Contracts, DECIMAL_PLACES, DEFAULT_SLIPPAGE, KAI_MAINNET_CHAIN_ID, PROVIDER } from '../../constants/address';
-import { Fetcher, Fraction, Pair, Percent, Route, Token, TokenAmount, Trade, TradeType } from '@uniswap/sdk';
-import { getWeb3, getWeb3Data, loadSmartContracts } from '../../utils/connectWallet';
+import { Contracts, DECIMAL_PLACES, DEFAULT_SLIPPAGE, KAI_MAINNET_CHAIN_ID, NATIVE_TOKEN_ADDRESS, PROVIDER } from '../../constants/address';
+import { Fetcher, Percent, Token, TokenAmount, Trade } from '@uniswap/sdk';
+import { getWeb3, getWeb3Data } from '../../utils/connectWallet';
 
 export default function Swap () {
   const [isInfo, setIsInfo] = useState(false);
@@ -32,6 +32,9 @@ export default function Swap () {
   const [isRouteExist, setIsRouteExist] = useState(true);
   // const [swapInfo, setSwapInfo] = useState();
   const swapInfo = useRef();
+  // const [isWrap, setIsWrap] = useState(false);
+  const isWrap = useRef(false);
+  const [disableWrap, setDisableWrap] = useState(true);
 
   useEffect(() => {
     const _web3 = getWeb3();
@@ -96,162 +99,183 @@ export default function Swap () {
   };
 
   const inputOnChange = async (event) => {
-    const infoTokenIn = tokenIn.current.getTokenInfo();
-    const infoTokenOut = tokenOut.current.getTokenInfo();
+    // const infoTokenIn = tokenIn.current.getTokenInfo();
+    // const infoTokenOut = tokenOut.current.getTokenInfo();
+    const infoTokenIn = tokenIn.current.getTokenInfo() ? tokenIn.current.getTokenInfo() : tokenIn.current.getNativeTokenInfo();
+    const infoTokenOut = tokenOut.current.getTokenInfo() ? tokenOut.current.getTokenInfo() : tokenOut.current.getNativeTokenInfo();
+    const _isWrap = isWrap.current;
 
     const value = event.target.value;
     const valueNumber = value.replace(/[^(0-9).]/gm, '');
     inputValue.current = valueNumber;
     checkInputAgainstBalance(valueNumber);
-    shouldApproveButtonDisabled();
     setInputValueState(valueNumber);
-
+    
     if (infoTokenIn && infoTokenOut) {
-      const trade = findRoute('in', valueNumber * 10 ** infoTokenIn.decimals);
-      let tradeInfo = {};
-
-      if (valueNumber) {
-        setIsInfo(true);
-
-        if (trade.length) {
-          setIsRouteExist(true);
-
-          tradeInfo.priceImpact = trade[0].priceImpact.toFixed(2);
-          tradeInfo.route = trade[0].route.path.map(token => {
-            // return {symbol: token.symbol, address: token.address};
-            return token;
-          });
-          tradeInfo.amountOut = trade[0].outputAmount.toFixed(
-            trade[0].outputAmount.currency.decimals <= DECIMAL_PLACES
-              ? parseInt(trade[0].outputAmount.currency.decimals)
-              : DECIMAL_PLACES
-          );
-          tradeInfo.amountIn = trade[0].inputAmount.toFixed(
-            trade[0].inputAmount.currency.decimals <= DECIMAL_PLACES
-              ? parseInt(trade[0].inputAmount.currency.decimals)
-              : DECIMAL_PLACES
-          );
-          tradeInfo.rate = {
-            // inOverOut: parseInt((tradeInfo.amountIn / tradeInfo.amountOut) * 10 ** infoTokenIn.decimals) / (10 ** infoTokenIn.decimals),
-            // outOverIn: parseInt((tradeInfo.amountOut / tradeInfo.amountIn) * 10 ** infoTokenOut.decimals) / (10 ** infoTokenOut.decimals),
-            inOverOut: parseInt((tradeInfo.amountIn / tradeInfo.amountOut) * 10 ** 3) / (10 ** 3),
-            outOverIn: parseInt((tradeInfo.amountOut / tradeInfo.amountIn) * 10 ** 3) / (10 ** 3),
-          };
-          tradeInfo.minOut = trade[0]
-            .minimumAmountOut(new Percent(
-              (slippageAndDeadline.current.getSlippage() * 100).toString(),
-              '10000'
-            ))
-            .toFixed(
+      if (_isWrap) {
+        outputValue.current = inputValue.current;
+        setOutputValueState(inputValue.current);
+        shouldWrapButtonDisabled();
+      } else {
+        shouldApproveButtonDisabled();
+        const trade = findRoute('in', valueNumber * 10 ** infoTokenIn.decimals);
+        let tradeInfo = {};
+  
+        if (valueNumber) {
+          setIsInfo(true);
+  
+          if (trade.length) {
+            setIsRouteExist(true);
+  
+            tradeInfo.priceImpact = trade[0].priceImpact.toFixed(2);
+            tradeInfo.route = trade[0].route.path.map(token => {
+              // return {symbol: token.symbol, address: token.address};
+              return token;
+            });
+            tradeInfo.amountOut = trade[0].outputAmount.toFixed(
               trade[0].outputAmount.currency.decimals <= DECIMAL_PLACES
-                ? trade[0].outputAmount.currency.decimals
+                ? parseInt(trade[0].outputAmount.currency.decimals)
                 : DECIMAL_PLACES
             );
-          console.log(
-            'trade: ', trade,
-            ' tradeInfo: ', tradeInfo,
-          );
-          // setSwapInfo(tradeInfo);
-          swapInfo.current = tradeInfo;
-
-          setOutputValueState(tradeInfo.amountOut);
-          outputValue.current = tradeInfo.amountOut;
+            tradeInfo.amountIn = trade[0].inputAmount.toFixed(
+              trade[0].inputAmount.currency.decimals <= DECIMAL_PLACES
+                ? parseInt(trade[0].inputAmount.currency.decimals)
+                : DECIMAL_PLACES
+            );
+            tradeInfo.rate = {
+              // inOverOut: parseInt((tradeInfo.amountIn / tradeInfo.amountOut) * 10 ** infoTokenIn.decimals) / (10 ** infoTokenIn.decimals),
+              // outOverIn: parseInt((tradeInfo.amountOut / tradeInfo.amountIn) * 10 ** infoTokenOut.decimals) / (10 ** infoTokenOut.decimals),
+              inOverOut: parseInt((tradeInfo.amountIn / tradeInfo.amountOut) * 10 ** 3) / (10 ** 3),
+              outOverIn: parseInt((tradeInfo.amountOut / tradeInfo.amountIn) * 10 ** 3) / (10 ** 3),
+            };
+            tradeInfo.minOut = trade[0]
+              .minimumAmountOut(new Percent(
+                (slippageAndDeadline.current.getSlippage() * 100).toString(),
+                '10000'
+              ))
+              .toFixed(
+                trade[0].outputAmount.currency.decimals <= DECIMAL_PLACES
+                  ? trade[0].outputAmount.currency.decimals
+                  : DECIMAL_PLACES
+              );
+            console.log(
+              'trade: ', trade,
+              ' tradeInfo: ', tradeInfo,
+            );
+            // setSwapInfo(tradeInfo);
+            swapInfo.current = tradeInfo;
+  
+            setOutputValueState(tradeInfo.amountOut);
+            outputValue.current = tradeInfo.amountOut;
+          } else {
+            setIsRouteExist(false);
+          }
+          checkOutputAgainstBalance(tradeInfo ? tradeInfo.amountOut : '');
         } else {
-          setIsRouteExist(false);
+          setInputValueState('');
+          inputValue.current = '';
+          setOutputValueState('');
+          outputValue.current = '';
+          swapInfo.current = '';
+          setIsInfo(false);
         }
-        checkOutputAgainstBalance(tradeInfo ? tradeInfo.amountOut : '');
-      } else {
-        setInputValueState('');
-        inputValue.current = '';
-        setOutputValueState('');
-        outputValue.current = '';
-        swapInfo.current = '';
-        setIsInfo(false);
+  
+        shouldApproveButtonDisabled();
       }
 
-      shouldApproveButtonDisabled();
     }
   };
 
   const outputOnChange = async (event) => {
-    const infoTokenIn = tokenIn.current.getTokenInfo();
-    const infoTokenOut = tokenOut.current.getTokenInfo();
+    // const infoTokenIn = tokenIn.current.getTokenInfo();
+    // const infoTokenOut = tokenOut.current.getTokenInfo();
+    const infoTokenIn = tokenIn.current.getTokenInfo() ? tokenIn.current.getTokenInfo() : tokenIn.current.getNativeTokenInfo();
+    const infoTokenOut = tokenOut.current.getTokenInfo() ? tokenOut.current.getTokenInfo() : tokenOut.current.getNativeTokenInfo();
+    const _isWrap = isWrap.current;
+
     const value = event.target.value;
     const valueNumber = value.replace(/[^(0-9).]/gm, '');
     outputValue.current = valueNumber;
     checkOutputAgainstBalance(valueNumber);
-    shouldApproveButtonDisabled();
     setOutputValueState(valueNumber);
-
+    
     if (infoTokenIn && infoTokenOut) {
-      const trade = findRoute('out', valueNumber * 10 ** infoTokenOut.decimals);
-      let tradeInfo = {};
-
-      if (valueNumber) {
-        setIsInfo(true);
-        
-        if (trade.length) {
-          setIsRouteExist(true);
-
-          tradeInfo.priceImpact = trade[0].priceImpact.toFixed(2);
-          tradeInfo.route = trade[0].route.path.map(token => {
-            // return token.symbol;
-            return token;
-          });
-          tradeInfo.amountOut = trade[0].outputAmount.toFixed(
-            trade[0].outputAmount.currency.decimals <= DECIMAL_PLACES
-              ? parseInt(trade[0].outputAmount.currency.decimals)
-              : DECIMAL_PLACES
-          );
-          tradeInfo.amountIn = trade[0].inputAmount.toFixed(
-            trade[0].inputAmount.currency.decimals <= DECIMAL_PLACES
-              ? parseInt(trade[0].inputAmount.currency.decimals)
-              : DECIMAL_PLACES
-          );
-          tradeInfo.rate = {
-            // inOverOut: parseInt((tradeInfo.amountIn / tradeInfo.amountOut) * 10 ** infoTokenIn.decimals) / (10 ** infoTokenIn.decimals),
-            // outOverIn: parseInt((tradeInfo.amountOut / tradeInfo.amountIn) * 10 ** infoTokenOut.decimals) / (10 ** infoTokenOut.decimals),
-            inOverOut: parseInt((tradeInfo.amountIn / tradeInfo.amountOut) * 10 ** 3) / (10 ** 3),
-            outOverIn: parseInt((tradeInfo.amountOut / tradeInfo.amountIn) * 10 ** 3) / (10 ** 3),
-          };
-          tradeInfo.maxIn = trade[0]
-            .maximumAmountIn(new Percent(
-              (slippageAndDeadline.current.getSlippage() * 100).toString(),
-              '10000'
-            ))
-            .toFixed(
-              trade[0].inputAmount.currency.decimals <= DECIMAL_PLACES
-                ? trade[0].inputAmount.currency.decimals
+      if (_isWrap) {
+        inputValue.current = outputValue.current;
+        setInputValueState(outputValue.current);
+        shouldWrapButtonDisabled();
+      } else {
+        shouldApproveButtonDisabled();
+        const trade = findRoute('out', valueNumber * 10 ** infoTokenOut.decimals);
+        let tradeInfo = {};
+  
+        if (valueNumber) {
+          setIsInfo(true);
+          
+          if (trade.length) {
+            setIsRouteExist(true);
+  
+            tradeInfo.priceImpact = trade[0].priceImpact.toFixed(2);
+            tradeInfo.route = trade[0].route.path.map(token => {
+              // return token.symbol;
+              return token;
+            });
+            tradeInfo.amountOut = trade[0].outputAmount.toFixed(
+              trade[0].outputAmount.currency.decimals <= DECIMAL_PLACES
+                ? parseInt(trade[0].outputAmount.currency.decimals)
                 : DECIMAL_PLACES
             );
-          console.log(
-            'trade: ', trade,
-            ' tradeInfo: ', tradeInfo,
-          );
-          // setSwapInfo(tradeInfo);
-          swapInfo.current = tradeInfo;
-
-          setInputValueState(tradeInfo.amountIn);
-          inputValue.current = tradeInfo.amountIn;
+            tradeInfo.amountIn = trade[0].inputAmount.toFixed(
+              trade[0].inputAmount.currency.decimals <= DECIMAL_PLACES
+                ? parseInt(trade[0].inputAmount.currency.decimals)
+                : DECIMAL_PLACES
+            );
+            tradeInfo.rate = {
+              // inOverOut: parseInt((tradeInfo.amountIn / tradeInfo.amountOut) * 10 ** infoTokenIn.decimals) / (10 ** infoTokenIn.decimals),
+              // outOverIn: parseInt((tradeInfo.amountOut / tradeInfo.amountIn) * 10 ** infoTokenOut.decimals) / (10 ** infoTokenOut.decimals),
+              inOverOut: parseInt((tradeInfo.amountIn / tradeInfo.amountOut) * 10 ** 3) / (10 ** 3),
+              outOverIn: parseInt((tradeInfo.amountOut / tradeInfo.amountIn) * 10 ** 3) / (10 ** 3),
+            };
+            tradeInfo.maxIn = trade[0]
+              .maximumAmountIn(new Percent(
+                (slippageAndDeadline.current.getSlippage() * 100).toString(),
+                '10000'
+              ))
+              .toFixed(
+                trade[0].inputAmount.currency.decimals <= DECIMAL_PLACES
+                  ? trade[0].inputAmount.currency.decimals
+                  : DECIMAL_PLACES
+              );
+            console.log(
+              'trade: ', trade,
+              ' tradeInfo: ', tradeInfo,
+            );
+            // setSwapInfo(tradeInfo);
+            swapInfo.current = tradeInfo;
+  
+            setInputValueState(tradeInfo.amountIn);
+            inputValue.current = tradeInfo.amountIn;
+          } else {
+            setIsRouteExist(false);
+          }
+          checkInputAgainstBalance(tradeInfo ? tradeInfo.maxIn : '');
         } else {
-          setIsRouteExist(false);
+          setInputValueState('');
+          inputValue.current = '';
+          setOutputValueState('');
+          outputValue.current = '';
+          swapInfo.current = '';
+          setIsInfo(false);
         }
-        checkInputAgainstBalance(tradeInfo ? tradeInfo.maxIn : '');
-      } else {
-        setInputValueState('');
-        inputValue.current = '';
-        setOutputValueState('');
-        outputValue.current = '';
-        swapInfo.current = '';
-        setIsInfo(false);
+  
+        shouldApproveButtonDisabled();
       }
-
-      shouldApproveButtonDisabled();
     }
   }
 
   const checkInputAgainstBalance = (value) => {
-    const infoTokenIn = tokenIn.current.getTokenInfo();
+    // const infoTokenIn = tokenIn.current.getTokenInfo();
+    const infoTokenIn = tokenIn.current.getTokenInfo() ? tokenIn.current.getTokenInfo() : tokenIn.current.getNativeTokenInfo();
 
     if (value > infoTokenIn.balance) {
       isInputValid.current = false;
@@ -265,15 +289,10 @@ export default function Swap () {
   };
 
   const checkOutputAgainstBalance = (value) => {
-    const infoTokenOut = tokenOut.current.getTokenInfo();
-    if (value > infoTokenOut.balance) {
-      isOutputValid.current = false;
+    if (value > 0) {
+      isOutputValid.current = true;
     } else {
-      if (value > 0) {
-        isOutputValid.current = true;
-      } else {
-        isOutputValid.current = false;
-      }
+      isOutputValid.current = false;
     }
   };
 
@@ -315,7 +334,7 @@ export default function Swap () {
       setIsAddressSame(true);
     } else {
       if (isInputValid.current && isOutputValid.current && inputValue.current && outputValue.current) {
-      // if (isInputValid.current && isOutputValid.current && inputValue && outputValue) {
+        // if (isInputValid.current && isOutputValid.current && inputValue && outputValue) {
         if (_swapInfo && _swapInfo.priceImpact >= 15) {
           console.log('_swapInfo: ', _swapInfo);
           setDisableApprove(true);
@@ -330,15 +349,46 @@ export default function Swap () {
     }
   };
 
+  const shouldWrapButtonDisabled = () => {
+    const infoTokenIn = tokenIn.current.getTokenInfo() ? tokenIn.current.getTokenInfo() : tokenIn.current.getNativeTokenInfo();
+
+    if (infoTokenIn) {
+      if (inputValue.current && inputValue.current <= infoTokenIn.balance) {
+        setDisableWrap(false);
+      } else {
+        setDisableWrap(true);
+      }
+    }
+  };
+
   const onTokenSelect = () => {
     resetInputs();
-    const infoTokenIn = tokenIn.current.getTokenInfo();
-    const infoTokenOut = tokenOut.current.getTokenInfo();
+    // const infoTokenIn = tokenIn.current.getTokenInfo();
+    // const infoTokenOut = tokenOut.current.getTokenInfo();
+    const infoTokenIn = tokenIn.current.getTokenInfo() ? tokenIn.current.getTokenInfo() : tokenIn.current.getNativeTokenInfo();
+    const infoTokenOut = tokenOut.current.getTokenInfo() ? tokenOut.current.getTokenInfo() : tokenOut.current.getNativeTokenInfo();
+
     if (infoTokenIn && infoTokenOut) {
-      if (infoTokenIn.address === infoTokenOut.address) {
-        setIsAddressSame(true);
-      } else {
+      if (infoTokenIn.address && infoTokenOut.address) {
+        // setIsWrap(false);
+        isWrap.current = false;
+        if (infoTokenIn.address === infoTokenOut.address) {
+          setIsAddressSame(true);
+        } else {
+          setIsAddressSame(false);
+        }
+      } else if (infoTokenIn.address && !infoTokenOut.address) {    // From WKAI to KAI
+        // setIsWrap(true);
+        isWrap.current = true;
         setIsAddressSame(false);
+      } else if (!infoTokenIn.address && infoTokenOut.address) {    // From KAI to WKAI
+        // setIsWrap(true);
+        isWrap.current = true;
+        setIsAddressSame(false);
+      } else {
+        // setIsWrap(true);
+        isWrap.current = true;
+        setIsAddressSame(true);
       }
     }
   };
@@ -348,7 +398,9 @@ export default function Swap () {
     outputValue.current = '';
     setInputValueState('');
     setOutputValueState('');
-    shouldApproveButtonDisabled();
+    if (isWrap.current) {
+      shouldApproveButtonDisabled();
+    }
     setIsInfo(false);
   }
 
@@ -401,8 +453,6 @@ export default function Swap () {
   };
 
   const getInfo = async () => {
-    const _web3 = web3.current;
-    const BN = _web3.utils.BN;
     const tokenA = new Token(KAI_MAINNET_CHAIN_ID, '0xb4D6438ebBB73bfF7Aea4E66d2B98469B6Ae4DEf', 3);
     const tokenB = new Token(KAI_MAINNET_CHAIN_ID, '0xbf35A89559F5e746cb8921F81dcd276612B41387', 3);
     const tokenC = new Token(KAI_MAINNET_CHAIN_ID, '0x72E184cf075EB1CFA861B49eC4E88E2311150a94', 3);
@@ -459,45 +509,46 @@ export default function Swap () {
 
   const approveTokens = async () => {
     const infoTokenIn = tokenIn.current.getTokenInfo();
-    const infoTokenOut = tokenOut.current.getTokenInfo();
+    // const infoTokenOut = tokenOut.current.getTokenInfo();
     const _web3 = web3.current;
     const _web3Data = web3Data.current;
     const BN = _web3.utils.BN;
 
     const contractTokenIn = new _web3.eth.Contract(Contracts.erc20.abi, infoTokenIn.address);
-    const contractTokenOut = new _web3.eth.Contract(Contracts.erc20.abi, infoTokenOut.address);
+    // const contractTokenOut = new _web3.eth.Contract(Contracts.erc20.abi, infoTokenOut.address);
 
     const amountInBN = new BN((inputValue.current * 10 ** infoTokenIn.decimals).toString())
       .mul(new BN(10)
       .pow(new BN(infoTokenIn.decimals)))
       .div(new BN((10 ** infoTokenIn.decimals).toString()))
       .toString();
-    const amountOutBN = new BN((outputValue.current * 10 ** infoTokenOut.decimals).toString())
-      .mul(new BN(10)
-      .pow(new BN(infoTokenOut.decimals)))
-      .div(new BN((10 ** infoTokenOut.decimals).toString()))
-      .toString();
+    // const amountOutBN = new BN((outputValue.current * 10 ** infoTokenOut.decimals).toString())
+    //   .mul(new BN(10)
+    //   .pow(new BN(infoTokenOut.decimals)))
+    //   .div(new BN((10 ** infoTokenOut.decimals).toString()))
+    //   .toString();
 
     // console.log('amountInRounded: ', amountInRounded, ' amountOutRounded: ', amountOutRounded);
     console.log(
       'amountInBN: ',
       amountInBN,
-      ' amountOutBN: ',
-      amountOutBN,
+      // ' amountOutBN: ',
+      // amountOutBN,
       ' amountInBN / (10 ** infoTokenIn.decimals): ',
       amountInBN / (10 ** infoTokenIn.decimals),
-      ' amountOutBN / (10 ** infoTokenOut.decimals): ',
-      amountOutBN / (10 ** infoTokenOut.decimals)
+      // ' amountOutBN / (10 ** infoTokenOut.decimals): ',
+      // amountOutBN / (10 ** infoTokenOut.decimals)
     );
     
     const transactionApproveTokenIn = await contractTokenIn.methods
       .approve(Contracts.router.address, amountInBN)
       .send({ from: _web3Data.address });
-    const transactionApproveTokenOut = await contractTokenOut.methods
-      .approve(Contracts.router.address, amountOutBN)
-      .send({ from: _web3Data.address });
+    // const transactionApproveTokenOut = await contractTokenOut.methods
+    //   .approve(Contracts.router.address, amountOutBN)
+    //   .send({ from: _web3Data.address });
 
-    if (transactionApproveTokenIn.status && transactionApproveTokenOut.status) {
+    // if (transactionApproveTokenIn.status && transactionApproveTokenOut.status) {
+    if (transactionApproveTokenIn.status) {
       setDisableSwap(false);
     } else {
       setDisableSwap(true);
@@ -550,7 +601,6 @@ export default function Swap () {
       ' amountInMaxBN: ', amountInMaxBN,
     );
     if (_swapInfo && _swapInfo.minOut) {
-      // swapExactTokensForTokens
       const txSwapExactTokensForTokens = await routerContract.methods
         .swapExactTokensForTokens(
           amountInBN,
@@ -578,6 +628,7 @@ export default function Swap () {
   const sendKAI = async () => {
     const _web3 = web3.current;
     const _web3Data = web3Data.current;
+    const wkaiContract = new _web3.eth.Contract(Contracts.wkai.abi, Contracts.wkai.address);
     
     // Send KAI
     // const tx = await _web3.eth.sendTransaction({
@@ -588,12 +639,37 @@ export default function Swap () {
     // );
     
     // Wrap KAI (convert KAI to WKAI)
+    // const txWrap = await wkaiContract.methods.deposit().send({
+    //   from: _web3Data.address,
+    //   value: _web3.utils.toWei('1', 'ether'),
+    // });
+    // console.log('txWrap: ', txWrap);
+
+    // Unwrap KAI (convert WKAI to KAI)
+    const txUnwrap = await wkaiContract.methods
+      .withdraw(_web3.utils.toWei('1', 'ether'))
+      .send({ from: _web3Data.address});
+    console.log('txUnwrap: ', txUnwrap);
+  };
+
+  const wrapOrUnwrap = async () => {
+    const _web3 = web3.current;
+    const _web3Data = web3Data.current;
     const wkaiContract = new _web3.eth.Contract(Contracts.wkai.abi, Contracts.wkai.address);
-    const txWrap = await wkaiContract.methods.deposit().send({
-      from: _web3Data.address,
-      value: _web3.utils.toWei('1', 'ether'),
-    });
-    console.log('txWrap: ', txWrap);
+    const infoTokenIn = tokenIn.current.getTokenInfo() ? tokenIn.current.getTokenInfo() : tokenIn.current.getNativeTokenInfo();
+
+    if (infoTokenIn.address) {
+      const txUnwrap = await wkaiContract.methods
+        .withdraw(_web3.utils.toWei(inputValue.current, 'ether'))
+        .send({ from: _web3Data.address});
+      console.log('txWrap: ', txUnwrap);
+    } else {
+      const txWrap = await wkaiContract.methods.deposit().send({
+        from: _web3Data.address,
+        value: _web3.utils.toWei(inputValue.current, 'ether'),
+      });
+      console.log('txWrap: ', txWrap);
+    }
   };
 
   return (
@@ -681,13 +757,20 @@ export default function Swap () {
         }
       </Row>
       <Row>
-        <Button disabled={disableApprove} onClick={approveTokens}>Approve</Button>
         <Button
-          // disabled={disableSwap}
-          onClick={swap}
+          disabled={isWrap.current ? true : disableApprove}
+          onClick={approveTokens}
+        >
+          Approve
+        </Button>
+        <Button
+          disabled={isWrap.current ? disableWrap : disableSwap}
+          onClick={isWrap.current ? wrapOrUnwrap : swap}
         >
           {
-            swapInfo.current
+            isWrap.current
+            ? 'Wrap/Unwrap'
+            : swapInfo.current
               ? swapInfo.current.priceImpact >= 15
                 ? 'Price impact too high'
                 : swapInfo.current.priceImpact >= 5

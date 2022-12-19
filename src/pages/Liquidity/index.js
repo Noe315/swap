@@ -221,11 +221,11 @@ export default function Liquidity () {
     const infoTokenIn = tokenIn.current.getTokenInfo() ? tokenIn.current.getTokenInfo() : tokenIn.current.getNativeTokenInfo();
     const infoTokenOut = tokenOut.current.getTokenInfo() ? tokenOut.current.getTokenInfo() : tokenOut.current.getNativeTokenInfo();
     setDisableProvide(true);
-    if (isInputValid.current && isOutputValid.current && inputValue.current && outputValue.current) {
-      setDisableApprove(false);
-    } else {
-      setDisableApprove(true);
-    }
+    // if (isInputValid.current && isOutputValid.current && inputValue.current && outputValue.current) {
+    //   setDisableApprove(false);
+    // } else {
+    //   setDisableApprove(true);
+    // }
     const addressIn = infoTokenIn.address ? infoTokenIn.address : NATIVE_TOKEN_ADDRESS;
     const addressOut = infoTokenOut.address ? infoTokenOut.address : NATIVE_TOKEN_ADDRESS;
     // if (pair.current.addressTokenIn === pair.current.addressTokenOut) {
@@ -236,6 +236,8 @@ export default function Liquidity () {
     } else {
       if (isInputValid.current && isOutputValid.current && inputValue.current && outputValue.current) {
         setDisableApprove(false);
+      } else {
+        setDisableApprove(true);
       }
       setIsAddressSame(false);
     }
