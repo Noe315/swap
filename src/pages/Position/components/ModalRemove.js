@@ -3,13 +3,14 @@ import { Button } from 'react-bootstrap';
 import Modal from 'react-bootstrap/Modal';
 import ModalSlippage from '../../../components/ModalSlippage';
 import { TableHeader } from '../../../components/styles';
-import { Contracts, DEFAULT_SLIPPAGE } from '../../../constants/address';
+import { Contracts, DEFAULT_SLIPPAGE, NATIVE_TOKEN_ADDRESS } from '../../../constants/address';
 import { getWeb3, getWeb3Data } from '../../../utils/connectWallet';
 import InputRemove from './InputRemove';
 import ModalHeader from './ModalHeader';
 
 export default function ModalRemove (props) {
   const position = props.positionState;
+  console.log('position: ', position);
   const [address, setAddress] = useState();
   const slippageAndDeadline = useRef();
   const [web3, setWeb3] = useState();
@@ -68,18 +69,69 @@ export default function ModalRemove (props) {
       ' deadline: ',
       deadline,
     );
-    
-    const txRemove = await routerContract.methods
-      .removeLiquidity(
-        position.token0Address,
-        position.token1Address,
-        outputTokenAmounts.outputTokenPoolWithDecimal,
-        amount0Min,
-        amount1Min,
-        address,
-        deadline
-      )
-      .send({ from: address });
+
+    let txRemove;
+    if (position.token0Address === NATIVE_TOKEN_ADDRESS && position.token1Address !== NATIVE_TOKEN_ADDRESS) {
+      console.log(
+        'position.token1Address: ', position.token1Address,
+        ' outputTokenAmounts.outputTokenPoolWithDecimal: ', outputTokenAmounts.outputTokenPoolWithDecimal,
+        ' amount1Min: ', amount1Min,
+        ' amount0Min: ', amount0Min,
+        ' address: ', address,
+        ' deadline: ', deadline,
+      );
+      txRemove = await routerContract.methods
+        .removeLiquidityETH(
+          position.token1Address,
+          outputTokenAmounts.outputTokenPoolWithDecimal,
+          amount1Min,
+          amount0Min,
+          address,
+          deadline
+        )
+        .send({ from: address });
+    } else if (position.token0Address !== NATIVE_TOKEN_ADDRESS && position.token1Address === NATIVE_TOKEN_ADDRESS) {
+      console.log(
+        'position.token0Address: ', position.token0Address,
+        ' outputTokenAmounts.outputTokenPoolWithDecimal: ', outputTokenAmounts.outputTokenPoolWithDecimal,
+        ' amount1Min: ', amount1Min,
+        ' amount0Min: ', amount0Min,
+        ' address: ', address,
+        ' deadline: ', deadline,
+      );
+      txRemove = await routerContract.methods
+        .removeLiquidityETH(
+          position.token0Address,
+          outputTokenAmounts.outputTokenPoolWithDecimal,
+          amount0Min,
+          amount1Min,
+          address,
+          deadline
+        )
+        .send({ from: address });
+      console.log('txRemove: ', txRemove);
+    } else {
+      console.log(
+        'position.token0Address: ', position.token0Address,
+        ' position.token1Address: ', position.token1Address,
+        ' outputTokenAmounts.outputTokenPoolWithDecimal: ', outputTokenAmounts.outputTokenPoolWithDecimal,
+        ' amount1Min: ', amount1Min,
+        ' amount0Min: ', amount0Min,
+        ' address: ', address,
+        ' deadline: ', deadline,
+      );
+      txRemove = await routerContract.methods
+        .removeLiquidity(
+          position.token0Address,
+          position.token1Address,
+          outputTokenAmounts.outputTokenPoolWithDecimal,
+          amount0Min,
+          amount1Min,
+          address,
+          deadline
+        )
+        .send({ from: address });
+    }  
     console.log('txRemove: ', txRemove);
   };
 
