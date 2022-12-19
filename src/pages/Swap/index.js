@@ -575,6 +575,27 @@ export default function Swap () {
     }
   };
 
+  const sendKAI = async () => {
+    const _web3 = web3.current;
+    const _web3Data = web3Data.current;
+    
+    // Send KAI
+    // const tx = await _web3.eth.sendTransaction({
+    //     to: '0x007DBdc4FCA732d28dA8e60494d0B2273f19fe0e',
+    //     from: _web3Data.address,
+    //     value: _web3.utils.toWei('1', 'ether'),
+    //   }
+    // );
+    
+    // Wrap KAI (convert KAI to WKAI)
+    const wkaiContract = new _web3.eth.Contract(Contracts.wkai.abi, Contracts.wkai.address);
+    const txWrap = await wkaiContract.methods.deposit().send({
+      from: _web3Data.address,
+      value: _web3.utils.toWei('1', 'ether'),
+    });
+    console.log('txWrap: ', txWrap);
+  };
+
   return (
     <BoxWrapper>
       <TableHeader>
@@ -621,6 +642,7 @@ export default function Swap () {
       >
         Test
       </Button>
+      <Button onClick={sendKAI}>Send KAI</Button>
       <Row>
         <BoxInput
           action='swap'

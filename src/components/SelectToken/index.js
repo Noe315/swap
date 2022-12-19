@@ -78,10 +78,10 @@
 //   );
 // }
 
-import React, { useEffect, useReducer, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Modal from 'react-bootstrap/Modal';
 import TokenList from './TokenList';
-import { Contracts } from '../../constants/address';
+import { Contracts, NATIVE_TOKEN_DECIMAL, NATIVE_TOKEN_NAME, NATIVE_TOKEN_SYMBOL } from '../../constants/address';
 import { getWeb3, getWeb3Data } from '../../utils/connectWallet';
 import { InputAddress, Invalid } from '../styles';
 
@@ -147,6 +147,13 @@ export default function SelectToken (props) {
     }
   };
 
+  const getBalanceNativeToken = async () => {
+    const _web3Data = web3Data.current;
+    const balance = await web3.eth.getBalance(_web3Data.address);
+    const balanceWithoutDecimal = balance / (10 ** NATIVE_TOKEN_DECIMAL);
+    return {balance: balanceWithoutDecimal, decimals: NATIVE_TOKEN_DECIMAL};
+  }
+
   // const setToken = async (_tokenAddress, _tokenSymbol) => {
   //   props.handleClose();
   //   if (props.name === 'inputToken') {
@@ -169,54 +176,83 @@ export default function SelectToken (props) {
   //   await props.setPair();
   // }
 
+  // const setToken = async (_tokenAddress, _tokenName, _tokenSymbol) => {
+  //   // props.handleClose();
+  //   handleCloseModal();
+  //   // const info = await getBalance(_tokenAddress);
+  //   const info = await getBalance(_tokenAddress);
+  //   if (props.name === 'inputToken') {
+  //     // props.setPair({
+  //     //   ...props.pair,
+  //     //   nameTokenIn: _tokenSymbol,
+  //     //   addressTokenIn: _tokenAddress,
+  //     // });
+
+  //     // props.setTokenInfo({
+  //     //   name: _tokenSymbol,
+  //     //   address: _tokenAddress,
+  //     // })
+  //     await props.setToken({
+  //       name: _tokenName,
+  //       address: _tokenAddress,
+  //       symbol: _tokenSymbol,
+  //       balance: info.balance,
+  //       decimals: info.decimals,
+  //     });
+  //   } else {
+  //     // props.setPair({
+  //     //   ...props.pair,
+  //     //   nameTokenOut: _tokenSymbol,
+  //     //   addressTokenOut: _tokenAddress,
+  //     // });
+
+  //     // props.setTokenInfo({
+  //     //   name: _tokenSymbol,
+  //     //   address: _tokenAddress,
+  //     // });
+
+  //     await props.setToken({
+  //       name: _tokenName,
+  //       address: _tokenAddress,
+  //       symbol: _tokenSymbol,
+  //       balance: info.balance,
+  //       decimals: info.decimals,
+  //     });
+  //   }
+  //   props.token.current = _tokenSymbol;
+  //   // props.setTokenSymbol(_tokenSymbol);
+  //   // props.shouldApproveButtonDisabled();
+  //   //   setIsInputExist(false);
+  //   //   await props.setPair();
+  // };
+
   const setToken = async (_tokenAddress, _tokenName, _tokenSymbol) => {
-    // props.handleClose();
     handleCloseModal();
-    // const info = await getBalance(_tokenAddress);
     const info = await getBalance(_tokenAddress);
-    if (props.name === 'inputToken') {
-      // props.setPair({
-      //   ...props.pair,
-      //   nameTokenIn: _tokenSymbol,
-      //   addressTokenIn: _tokenAddress,
-      // });
 
-      // props.setTokenInfo({
-      //   name: _tokenSymbol,
-      //   address: _tokenAddress,
-      // })
-      await props.setToken({
-        name: _tokenName,
-        address: _tokenAddress,
-        symbol: _tokenSymbol,
-        balance: info.balance,
-        decimals: info.decimals,
-      });
-    } else {
-      // props.setPair({
-      //   ...props.pair,
-      //   nameTokenOut: _tokenSymbol,
-      //   addressTokenOut: _tokenAddress,
-      // });
-
-      // props.setTokenInfo({
-      //   name: _tokenSymbol,
-      //   address: _tokenAddress,
-      // });
-
-      await props.setToken({
-        name: _tokenName,
-        address: _tokenAddress,
-        symbol: _tokenSymbol,
-        balance: info.balance,
-        decimals: info.decimals,
-      });
-    }
+    await props.setToken({
+      name: _tokenName,
+      address: _tokenAddress,
+      symbol: _tokenSymbol,
+      balance: info.balance,
+      decimals: info.decimals,
+    });
+    
     props.token.current = _tokenSymbol;
-    // props.setTokenSymbol(_tokenSymbol);
-    // props.shouldApproveButtonDisabled();
-    //   setIsInputExist(false);
-    //   await props.setPair();
+  };
+
+  const setNativeToken = async () => {
+    handleCloseModal();
+    const info = await getBalanceNativeToken();
+
+    await props.setNativeToken({
+      name: NATIVE_TOKEN_NAME,
+      symbol: NATIVE_TOKEN_SYMBOL,
+      balance: info.balance,
+      decimals: info.decimals,
+    });
+
+    props.token.current = NATIVE_TOKEN_SYMBOL;
   };
 
   const handleCloseModal = () => {
@@ -243,6 +279,7 @@ export default function SelectToken (props) {
           tokenName={tokenName}
           isInputExist={isInputExist}
           setToken={setToken}
+          setNativeToken={setNativeToken}
         />
       </Modal.Body>
     </Modal>

@@ -17,14 +17,28 @@ export default function BoxInfo (props) {
           <div onClick={() => setToggleCurrency(!toggleCurrency)}>
               {
                 props.isPairExist
-                ? `1 ${props.tokenIn.current.getTokenInfo().name} =
-                  ${Math.round(props.rate * 10000) / 10000}
-                  ${props.tokenOut.current.getTokenInfo().name}`
-                : props.rate
-                  ? `1 ${props.tokenIn.current.getTokenInfo().name} =
-                    ${Math.round(props.rate * 10000) / 10000}
-                    ${props.tokenOut.current.getTokenInfo().name}`
-                  : '1 undefined = undefined'
+                  ? `1 ${
+                    props.tokenIn.current.getTokenInfo()
+                      ? props.tokenIn.current.getTokenInfo().symbol
+                      : props.tokenIn.current.getNativeTokenInfo().symbol
+                  } = ${Math.round(props.rate * 10000) / 10000}
+                  ${
+                    props.tokenOut.current.getTokenInfo()
+                      ? props.tokenOut.current.getTokenInfo().symbol
+                      : props.tokenOut.current.getNativeTokenInfo().symbol
+                  }`
+                  : props.rate
+                    ? `1 ${
+                      props.tokenIn.current.getTokenInfo()
+                        ? props.tokenIn.current.getTokenInfo().symbol
+                        : props.tokenIn.current.getNativeTokenInfo().symbol
+                    } = ${Math.round(props.rate * 10000) / 10000}
+                    ${
+                      props.tokenOut.current.getTokenInfo()
+                        ? props.tokenOut.current.getTokenInfo().symbol
+                        : props.tokenOut.current.getNativeTokenInfo().symbol
+                    }`
+                    : '1 undefined = undefined'
               }
           </div>
         }
@@ -32,15 +46,29 @@ export default function BoxInfo (props) {
           !toggleCurrency &&
           <div onClick={() => setToggleCurrency(!toggleCurrency)}>
               {
-                props.isPairExist ?
-                  `1 ${props.tokenOut.current.getTokenInfo().name} =
-                    ${Math.round((1 / props.rate) * 10000) / 10000}
-                    ${props.tokenIn.current.getTokenInfo().name}` :
-                      props.rate ?
-                        `1 ${props.tokenOut.current.getTokenInfo().name} =
-                          ${Math.round((1 / props.rate) * 10000) / 10000}
-                          ${props.tokenIn.current.getTokenInfo().name}` :
-                            '1 undefined = undefined'
+                props.isPairExist
+                ? `1 ${
+                    props.tokenOut.current.getTokenInfo()
+                      ? props.tokenOut.current.getTokenInfo().symbol
+                      : props.tokenOut.current.getNativeTokenInfo().symbol
+                    } = ${Math.round((1 / props.rate) * 10000) / 10000}
+                    ${
+                      props.tokenIn.current.getTokenInfo()
+                        ? props.tokenIn.current.getTokenInfo().symbol
+                        : props.tokenIn.current.getNativeTokenInfo().symbol
+                    }`
+                : props.rate
+                    ? `1 ${
+                      props.tokenOut.current.getTokenInfo()
+                        ? props.tokenOut.current.getTokenInfo().symbol
+                        : props.tokenOut.current.getNativeTokenInfo().symbol
+                          } = ${Math.round((1 / props.rate) * 10000) / 10000}
+                          ${
+                            props.tokenIn.current.getTokenInfo()
+                              ? props.tokenIn.current.getTokenInfo().symbol
+                              : props.tokenIn.current.getNativeTokenInfo().symbol
+                          }`
+                    : '1 undefined = undefined'
               }
           </div>
         }

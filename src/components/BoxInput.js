@@ -126,7 +126,7 @@
 //   }
 // }
 
-import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { Button } from 'react-bootstrap';
 import {
   Input,
@@ -135,36 +135,42 @@ import {
   SwapBoxInputTitle,
   SwapBoxInputWrapper
 } from './styles';
-import { Contracts } from '../constants/address';
-import { getWeb3, getWeb3Data } from '../utils/connectWallet';
+// import { Contracts } from '../constants/address';
+// import { getWeb3, getWeb3Data } from '../utils/connectWallet';
 import SelectToken from './SelectToken/index';
+import { DECIMAL_PLACES } from '../constants/address';
 
 const BoxInput = forwardRef((props, _ref) => {
   const token = useRef();
-  const [web3, setWeb3] = useState();
-  const [web3Data, setWeb3Data] = useState();
-  const [balance, setBalance] = useState();
+  // const [web3, setWeb3] = useState();
+  // const [web3Data, setWeb3Data] = useState();
+  // const [balance, setBalance] = useState();
   const [isSelectToken, setIsSelectToken] = useState();
   const [tokenInfoState, setTokenInfoState] = useState();
+  const [nativeTokenInfoState, setNativeTokenInfoState] = useState();
   const tokenInfo = useRef();
+  const nativeTokenInfo = useRef();
 
-  useEffect(() => {
-    const _web3 = getWeb3();
-    setWeb3(_web3);
-    _getWeb3Data();
-    // getBalance();
-  }, []);
+  // useEffect(() => {
+  //   // const _web3 = getWeb3();
+  //   // setWeb3(_web3);
+  //   // _getWeb3Data();
+  //   // getBalance();
+  // }, []);
 
   useImperativeHandle(_ref, () => ({
     getTokenInfo: () => {
       return tokenInfo.current;
+    },
+    getNativeTokenInfo: () => {
+      return nativeTokenInfo.current;
     }
   }));
 
-  const _getWeb3Data = async () => {
-    const _web3Data = await getWeb3Data();
-    setWeb3Data(_web3Data);
-  }
+  // const _getWeb3Data = async () => {
+  //   const _web3Data = await getWeb3Data();
+  //   setWeb3Data(_web3Data);
+  // }
 
   // const getBalance = async (address) => {
   //   if (web3) {
@@ -185,9 +191,23 @@ const BoxInput = forwardRef((props, _ref) => {
   const setToken = async (_token) => {
     tokenInfo.current = _token;
     setTokenInfoState(_token);
+    
+    nativeTokenInfo.current = undefined;
+    setNativeTokenInfoState();
+
     // await getBalance(_token.address);
     await props.onTokenSelect();
   }
+
+  const setNativeToken = async (_token) => {
+    nativeTokenInfo.current = _token;
+    setNativeTokenInfoState(_token);
+
+    tokenInfo.current = undefined;
+    setTokenInfoState();
+
+    await props.onTokenSelect();
+  };
 
   const showSelectToken = () => {
     setIsSelectToken(!isSelectToken);
@@ -197,8 +217,9 @@ const BoxInput = forwardRef((props, _ref) => {
       <SelectToken
         show={isSelectToken}
         handleClose={() => setIsSelectToken(false)}
-        setTokenInfo={setTokenInfoState}
+        // setTokenInfo={setTokenInfoState}
         setToken={setToken}
+        setNativeToken={setNativeToken}
         token={token}
         name={props.name}
       />
@@ -206,7 +227,21 @@ const BoxInput = forwardRef((props, _ref) => {
         <SwapBoxInput>
           <SwapBoxInputTitle>
             {/* <div>Balance: {balance ? balance : '0'}</div> */}
-            <div>Balance: {tokenInfo.current ? tokenInfo.current.balance : '0'}</div>
+            <div>
+              Balance: {' '}
+              {
+                /* tokenInfo.current
+                ? tokenInfo.current.balance
+                : nativeTokenInfo.current
+                  ? parseFloat(nativeTokenInfo.current.balance * 10 ** DECIMAL_PLACES) / (10 ** DECIMAL_PLACES)
+                  : '0' */
+                tokenInfoState
+                ? tokenInfoState.balance
+                : nativeTokenInfoState
+                  ? parseFloat(nativeTokenInfoState.balance * 10 ** DECIMAL_PLACES) / (10 ** DECIMAL_PLACES)
+                  : '0'
+              }
+            </div>
           </SwapBoxInputTitle>
 
           <SwapBoxInputArea>
@@ -220,7 +255,18 @@ const BoxInput = forwardRef((props, _ref) => {
               onClick={showSelectToken}
             >
               {/* {token.current ? token.current : 'Select Token'} */}
-              {tokenInfo.current ? tokenInfo.current.symbol : 'Select Token'}
+              {
+                /* tokenInfo.current
+                ? tokenInfo.current.symbol
+                : nativeTokenInfo.current
+                  ? nativeTokenInfo.current.symbol
+                  : 'Select Token' */
+                tokenInfoState
+                ? tokenInfoState.symbol
+                : nativeTokenInfoState
+                  ? nativeTokenInfoState.symbol
+                  : 'Select Token'
+              }
             </Button>
           </SwapBoxInputArea>
         </SwapBoxInput>

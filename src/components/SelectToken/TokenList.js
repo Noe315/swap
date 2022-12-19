@@ -28,8 +28,13 @@ export default function TokenList (props) {
           <ListGroup.Item
             as="button"
             action="true"
+            // onClick={
+            //   () => props.setToken(token.address, token.name, token.symbol)
+            // }
             onClick={
-              () => props.setToken(token.address, token.name, token.symbol)
+              () => !token.address && token.symbol === 'KAI'
+                ? props.setNativeToken()
+                : props.setToken(token.address, token.name, token.symbol)
             }
             key={token.address}
           >

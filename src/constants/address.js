@@ -1,10 +1,10 @@
 import { ethers } from 'ethers';
-import { router, factory, erc20, uniswapV2Pair } from '../abis';
+import { router, factory, erc20, uniswapV2Pair, wkai } from '../abis';
 
 export const Contracts = {
   router: {
     name: 'router',
-    address: '0x1116351Bf470717bDd71A9F850ACb14149EB3261',
+    address: '0xcaA3AF1b19166277dAC631948b5FE94f6A4eD4e8',
     abi: router,
   },
   factory: {
@@ -15,6 +15,11 @@ export const Contracts = {
   erc20: {
     name: 'erc20',
     abi: erc20,
+  },
+  wkai: {
+    name: 'wkai',
+    address: '0xAF984E23EAA3E7967F3C5E007fbe397D8566D23d',
+    abi: wkai,
   },
   uniswapV2Pair: {
     name: 'uniswapV2Pair',
@@ -35,3 +40,7 @@ const network = {
   _defaultProvider: (providers) => new providers.JsonRpcProvider('https://rpc.kardiachain.io')
 }
 export const PROVIDER = ethers.getDefaultProvider(network);
+export const NATIVE_TOKEN_DECIMAL = 18;
+export const NATIVE_TOKEN_NAME = 'KAI';
+export const NATIVE_TOKEN_SYMBOL = 'KAI';
+export const NATIVE_TOKEN_ADDRESS = '0xAF984E23EAA3E7967F3C5E007fbe397D8566D23d';
