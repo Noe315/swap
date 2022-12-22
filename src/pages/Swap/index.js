@@ -297,8 +297,10 @@ export default function Swap () {
   };
 
   const shouldApproveButtonDisabled = () => {
-    const infoTokenOut = tokenOut.current.getTokenInfo();
-    const infoTokenIn = tokenIn.current.getTokenInfo();
+    // const infoTokenOut = tokenOut.current.getTokenInfo();
+    // const infoTokenIn = tokenIn.current.getTokenInfo();
+    const infoTokenIn = tokenIn.current.getTokenInfo() ? tokenIn.current.getTokenInfo() : tokenIn.current.getNativeTokenInfo();
+    const infoTokenOut = tokenOut.current.getTokenInfo() ? tokenOut.current.getTokenInfo() : tokenOut.current.getNativeTokenInfo();
     const _swapInfo = swapInfo.current;
     setDisableSwap(true);
     // console.log(
@@ -329,19 +331,27 @@ export default function Swap () {
     //   setDisableApprove(true);
     // }
 
-    if (infoTokenIn.address === infoTokenOut.address) {
+    const addressIn = infoTokenIn.address ? infoTokenIn.address : NATIVE_TOKEN_ADDRESS;
+    const addressOut = infoTokenOut.address ? infoTokenOut.address : NATIVE_TOKEN_ADDRESS;
+
+    if (addressIn === addressOut) {
       setDisableApprove(true);
       setIsAddressSame(true);
     } else {
       if (isInputValid.current && isOutputValid.current && inputValue.current && outputValue.current) {
-        // if (isInputValid.current && isOutputValid.current && inputValue && outputValue) {
-        if (_swapInfo && _swapInfo.priceImpact >= 15) {
-          console.log('_swapInfo: ', _swapInfo);
-          setDisableApprove(true);
+        if (infoTokenIn.address) {
+          // if (isInputValid.current && isOutputValid.current && inputValue && outputValue) {
+          if (_swapInfo && _swapInfo.priceImpact >= 15) {
+            console.log('_swapInfo: ', _swapInfo);
+            setDisableApprove(true);
+          } else {
+            setDisableApprove(false);
+          }
+          // setDisableApprove(false);
         } else {
-          setDisableApprove(false);
+          setDisableApprove(true);
+          setDisableSwap(false);
         }
-        // setDisableApprove(false);
       } else {
         setDisableApprove(true);
       }
@@ -362,7 +372,6 @@ export default function Swap () {
   };
 
   const onTokenSelect = () => {
-    resetInputs();
     // const infoTokenIn = tokenIn.current.getTokenInfo();
     // const infoTokenOut = tokenOut.current.getTokenInfo();
     const infoTokenIn = tokenIn.current.getTokenInfo() ? tokenIn.current.getTokenInfo() : tokenIn.current.getNativeTokenInfo();
@@ -378,12 +387,11 @@ export default function Swap () {
           setIsAddressSame(false);
         }
       } else if (infoTokenIn.address && !infoTokenOut.address) {    // From WKAI to KAI
-        // setIsWrap(true);
-        isWrap.current = true;
+        isWrap.current = infoTokenIn.address === NATIVE_TOKEN_ADDRESS;
         setIsAddressSame(false);
       } else if (!infoTokenIn.address && infoTokenOut.address) {    // From KAI to WKAI
         // setIsWrap(true);
-        isWrap.current = true;
+        isWrap.current = infoTokenOut.address === NATIVE_TOKEN_ADDRESS;
         setIsAddressSame(false);
       } else {
         // setIsWrap(true);
@@ -391,6 +399,8 @@ export default function Swap () {
         setIsAddressSame(true);
       }
     }
+    
+    resetInputs();
   };
 
   const resetInputs = () => {
@@ -406,20 +416,39 @@ export default function Swap () {
 
   const findRoute = (type, value) => {
     const _pairs = pairs.current;
-    const infoTokenIn = tokenIn.current.getTokenInfo();
-    const infoTokenOut = tokenOut.current.getTokenInfo();
+    // const infoTokenIn = tokenIn.current.getTokenInfo();
+    // const infoTokenOut = tokenOut.current.getTokenInfo();
+    const infoTokenIn = tokenIn.current.getTokenInfo() ? tokenIn.current.getTokenInfo() : tokenIn.current.getNativeTokenInfo();
+    const infoTokenOut = tokenOut.current.getTokenInfo() ? tokenOut.current.getTokenInfo() : tokenOut.current.getNativeTokenInfo();
+    const addressIn = infoTokenIn.address ? infoTokenIn.address : NATIVE_TOKEN_ADDRESS;
+    const addressOut = infoTokenOut.address ? infoTokenOut.address : NATIVE_TOKEN_ADDRESS;
+    const nativeInSymbol = infoTokenIn.address
+      ? infoTokenIn.address === NATIVE_TOKEN_ADDRESS
+        ? 'WKAI'
+        : infoTokenIn.symbol
+      : 'WKAI';
+    const nativeOutSymbol = infoTokenOut.address
+      ? infoTokenOut.address === NATIVE_TOKEN_ADDRESS
+        ? 'WKAI'
+        : infoTokenOut.symbol
+      : 'WKAI';
+    
     const _tokenIn = new Token(
       KAI_MAINNET_CHAIN_ID,
-      infoTokenIn.address,
+      // infoTokenIn.address,
+      addressIn,
       infoTokenIn.decimals,
-      infoTokenIn.symbol,
+      // infoTokenIn.symbol,
+      nativeInSymbol,
       infoTokenIn.name
     );
     const _tokenOut = new Token(
       KAI_MAINNET_CHAIN_ID,
-      infoTokenOut.address,
+      // infoTokenOut.address,
+      addressOut,
       infoTokenOut.decimals,
-      infoTokenOut.symbol,
+      // infoTokenOut.symbol,
+      nativeOutSymbol,
       infoTokenOut.name
     );
 
@@ -435,7 +464,7 @@ export default function Swap () {
     if (type === 'in') {
       try {
         trade = Trade
-          .bestTradeExactIn(_pairs, new TokenAmount(_tokenIn, value), _tokenOut, { maxNumResults: 4, maxHops: 4 });
+          .bestTradeExactIn(_pairs, new TokenAmount(_tokenIn, value), _tokenOut, { maxNumResults: 3, maxHops: 3 });
         
       } catch (err) {
         console.log('error: ', err);
@@ -443,7 +472,7 @@ export default function Swap () {
     } else {
       try {
         trade = Trade
-          .bestTradeExactOut(_pairs, _tokenIn, new TokenAmount(_tokenOut, value), { maxNumResults: 4, maxHops: 4 });
+          .bestTradeExactOut(_pairs, _tokenIn, new TokenAmount(_tokenOut, value), { maxNumResults: 3, maxHops: 3 });
       } catch (err) {
         console.log('error: ', err);
       }
@@ -508,57 +537,43 @@ export default function Swap () {
   };
 
   const approveTokens = async () => {
-    const infoTokenIn = tokenIn.current.getTokenInfo();
-    // const infoTokenOut = tokenOut.current.getTokenInfo();
+    // const infoTokenIn = tokenIn.current.getTokenInfo();
+    const infoTokenIn = tokenIn.current.getTokenInfo() ? tokenIn.current.getTokenInfo() : tokenIn.current.getNativeTokenInfo();
     const _web3 = web3.current;
     const _web3Data = web3Data.current;
     const BN = _web3.utils.BN;
-
-    const contractTokenIn = new _web3.eth.Contract(Contracts.erc20.abi, infoTokenIn.address);
-    // const contractTokenOut = new _web3.eth.Contract(Contracts.erc20.abi, infoTokenOut.address);
 
     const amountInBN = new BN((inputValue.current * 10 ** infoTokenIn.decimals).toString())
       .mul(new BN(10)
       .pow(new BN(infoTokenIn.decimals)))
       .div(new BN((10 ** infoTokenIn.decimals).toString()))
       .toString();
-    // const amountOutBN = new BN((outputValue.current * 10 ** infoTokenOut.decimals).toString())
-    //   .mul(new BN(10)
-    //   .pow(new BN(infoTokenOut.decimals)))
-    //   .div(new BN((10 ** infoTokenOut.decimals).toString()))
-    //   .toString();
 
-    // console.log('amountInRounded: ', amountInRounded, ' amountOutRounded: ', amountOutRounded);
     console.log(
       'amountInBN: ',
       amountInBN,
-      // ' amountOutBN: ',
-      // amountOutBN,
       ' amountInBN / (10 ** infoTokenIn.decimals): ',
       amountInBN / (10 ** infoTokenIn.decimals),
-      // ' amountOutBN / (10 ** infoTokenOut.decimals): ',
-      // amountOutBN / (10 ** infoTokenOut.decimals)
     );
     
-    const transactionApproveTokenIn = await contractTokenIn.methods
-      .approve(Contracts.router.address, amountInBN)
-      .send({ from: _web3Data.address });
-    // const transactionApproveTokenOut = await contractTokenOut.methods
-    //   .approve(Contracts.router.address, amountOutBN)
-    //   .send({ from: _web3Data.address });
-
-    // if (transactionApproveTokenIn.status && transactionApproveTokenOut.status) {
-    if (transactionApproveTokenIn.status) {
-      setDisableSwap(false);
-    } else {
-      setDisableSwap(true);
+    if (infoTokenIn.address) {
+      const contractTokenIn = new _web3.eth.Contract(Contracts.erc20.abi, infoTokenIn.address);
+      const transactionApproveTokenIn = await contractTokenIn.methods
+        .approve(Contracts.router.address, amountInBN)
+        .send({ from: _web3Data.address });
+        if (transactionApproveTokenIn.status) {
+          setDisableSwap(false);
+        } else {
+          setDisableSwap(true);
+        }
     }
   }
 
   const swap = async () => {
-    const _web3 = web3.current;
+    const infoTokenIn = tokenIn.current.getTokenInfo() ? tokenIn.current.getTokenInfo() : tokenIn.current.getNativeTokenInfo();
+    const infoTokenOut = tokenOut.current.getTokenInfo() ? tokenOut.current.getTokenInfo() : tokenOut.current.getNativeTokenInfo();
     const _web3Data = web3Data.current;
-    const BN = _web3.utils.BN;
+    const BN = web3.current.utils.BN;
     const _swapInfo = swapInfo.current;
     const routerContract = _web3Data.contracts.router;
     console.log('_swapInfo: ', _swapInfo);
@@ -601,27 +616,75 @@ export default function Swap () {
       ' amountInMaxBN: ', amountInMaxBN,
     );
     if (_swapInfo && _swapInfo.minOut) {
-      const txSwapExactTokensForTokens = await routerContract.methods
-        .swapExactTokensForTokens(
-          amountInBN,
-          amountOutMinBN,
-          path,
-          to,
-          deadline,
-        )
-        .send({ from: _web3Data.address });
-      console.log('txSwapExactTokensForTokens: ', txSwapExactTokensForTokens);
+      let txSwapExactIn;
+      if (!infoTokenIn.address && infoTokenOut.address) {
+        // Passed
+        txSwapExactIn = await routerContract.methods
+          .swapExactETHForTokens(
+            amountOutMinBN,
+            path,
+            to,
+            deadline,
+          )
+          .send({ from: _web3Data.address, value: amountInBN });
+      } else if (infoTokenIn.address && !infoTokenOut.address) {
+        // Passed
+        txSwapExactIn = await routerContract.methods
+          .swapExactTokensForETH(
+            amountInBN,
+            amountOutMinBN,
+            path,
+            to,
+            deadline,
+          )
+          .send({ from: _web3Data.address });
+      } else if (infoTokenIn.address && infoTokenOut.address) {
+        txSwapExactIn = await routerContract.methods
+          .swapExactTokensForTokens(
+            amountInBN,
+            amountOutMinBN,
+            path,
+            to,
+            deadline,
+          )
+          .send({ from: _web3Data.address });
+      }
+      console.log('txSwapExactIn: ', txSwapExactIn);
     } else if (_swapInfo && _swapInfo.maxIn) {
-      const txSwapTokensForExactTokens = await routerContract.methods
-        .swapTokensForExactTokens(
-          amountOutBN,
-          amountInMaxBN,
-          path,
-          to,
-          deadline,
-        )
-        .send({ from : _web3Data.address });
-      console.log('txSwapTokensForExactTokens: ', txSwapTokensForExactTokens);
+      let txExactOut;
+      if (!infoTokenIn.address && infoTokenOut.address) {
+        // Passed
+        txExactOut = await routerContract.methods
+          .swapETHForExactTokens(
+            amountOutBN,
+            path,
+            to,
+            deadline,
+          )
+          .send({ from : _web3Data.address, value: amountInMaxBN });
+      } else if (infoTokenIn.address && !infoTokenOut.address) {
+        // Passed
+        txExactOut = await routerContract.methods
+          .swapTokensForExactETH(
+            amountOutBN,
+            amountInMaxBN,
+            path,
+            to,
+            deadline,
+          )
+          .send({ from : _web3Data.address });
+      } else if (infoTokenIn.address && infoTokenOut.address) {
+        txExactOut = await routerContract.methods
+          .swapTokensForExactTokens(
+            amountOutBN,
+            amountInMaxBN,
+            path,
+            to,
+            deadline,
+          )
+          .send({ from : _web3Data.address });
+      }
+      console.log('txExactOut: ', txExactOut);
     }
   };
 
