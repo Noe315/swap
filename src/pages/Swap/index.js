@@ -618,36 +618,93 @@ export default function Swap () {
     if (_swapInfo && _swapInfo.minOut) {
       let txSwapExactIn;
       if (!infoTokenIn.address && infoTokenOut.address) {
-        // Passed
-        txSwapExactIn = await routerContract.methods
-          .swapExactETHForTokens(
-            amountOutMinBN,
-            path,
-            to,
-            deadline,
-          )
-          .send({ from: _web3Data.address, value: amountInBN });
+        const _shouldUseSupportingFeeOnTransfer = await shouldUseSupportingFeeOnTransfer(
+          3, amountInBN, amountOutMinBN, path, to, deadline
+        );
+        const returnType = typeof _shouldUseSupportingFeeOnTransfer === 'boolean';
+        console.log('_shouldUseSupportingFeeOnTransfer: ', _shouldUseSupportingFeeOnTransfer);
+        if (returnType) {
+          if (_shouldUseSupportingFeeOnTransfer) {
+            // Passed
+            txSwapExactIn = await routerContract.methods
+              .swapExactETHForTokensSupportingFeeOnTransferTokens(
+                amountOutMinBN,
+                path,
+                to,
+                deadline,
+              )
+              .send({ from: _web3Data.address, value: amountInBN });
+          } else {
+            txSwapExactIn = await routerContract.methods
+              .swapExactETHForTokens(
+                amountOutMinBN,
+                path,
+                to,
+                deadline,
+              )
+              .send({ from: _web3Data.address, value: amountInBN });
+          }
+        }
       } else if (infoTokenIn.address && !infoTokenOut.address) {
-        // Passed
-        txSwapExactIn = await routerContract.methods
-          .swapExactTokensForETH(
-            amountInBN,
-            amountOutMinBN,
-            path,
-            to,
-            deadline,
-          )
-          .send({ from: _web3Data.address });
+        const _shouldUseSupportingFeeOnTransfer = await shouldUseSupportingFeeOnTransfer(
+          2, amountInBN, amountOutMinBN, path, to, deadline
+        );
+        const returnType = typeof _shouldUseSupportingFeeOnTransfer === 'boolean';
+        console.log('_shouldUseSupportingFeeOnTransfer: ', _shouldUseSupportingFeeOnTransfer);
+        if (returnType) {
+          if (_shouldUseSupportingFeeOnTransfer) {
+            // Passed
+            txSwapExactIn = await routerContract.methods
+              .swapExactTokensForETHSupportingFeeOnTransferTokens(
+                amountInBN,
+                amountOutMinBN,
+                path,
+                to,
+                deadline,
+              )
+              .send({ from: _web3Data.address });
+          } else {
+            txSwapExactIn = await routerContract.methods
+              .swapExactTokensForETH(
+                amountInBN,
+                amountOutMinBN,
+                path,
+                to,
+                deadline,
+              )
+              .send({ from: _web3Data.address });
+          }
+        }
       } else if (infoTokenIn.address && infoTokenOut.address) {
-        txSwapExactIn = await routerContract.methods
-          .swapExactTokensForTokens(
-            amountInBN,
-            amountOutMinBN,
-            path,
-            to,
-            deadline,
-          )
-          .send({ from: _web3Data.address });
+        const _shouldUseSupportingFeeOnTransfer = await shouldUseSupportingFeeOnTransfer(
+          1, amountInBN, amountOutMinBN, path, to, deadline
+        );
+        const returnType = typeof _shouldUseSupportingFeeOnTransfer === 'boolean';
+        console.log('_shouldUseSupportingFeeOnTransfer: ', _shouldUseSupportingFeeOnTransfer);
+        if (returnType) {
+          if (_shouldUseSupportingFeeOnTransfer) {
+            // Passed
+            txSwapExactIn = await routerContract.methods
+              .swapExactTokensForTokensSupportingFeeOnTransferTokens(
+                amountInBN,
+                amountOutMinBN,
+                path,
+                to,
+                deadline,
+              )
+              .send({ from: _web3Data.address });
+          } else {
+            txSwapExactIn = await routerContract.methods
+              .swapExactTokensForTokens(
+                amountInBN,
+                amountOutMinBN,
+                path,
+                to,
+                deadline,
+              )
+              .send({ from: _web3Data.address });
+          }
+        }
       }
       console.log('txSwapExactIn: ', txSwapExactIn);
     } else if (_swapInfo && _swapInfo.maxIn) {
@@ -735,6 +792,169 @@ export default function Swap () {
     }
   };
 
+  const web3Call = async () => {
+    const _web3 = web3.current;
+    const _web3Data = web3Data.current;
+    const encode = _web3.eth.abi.encodeFunctionCall({
+      // name: 'swapExactETHForTokens',
+      name: 'swapExactETHForTokensSupportingFeeOnTransferTokens',
+      type: 'function',
+      inputs: [{
+        type: 'uint256',
+        name: 'amountOutMin',
+      }, {
+        type: 'address[]',
+        name: 'path',
+      }, {
+        name: "to",
+				type: "address",
+      }, {
+        name: "deadline",
+				type: "uint256",
+      }]
+    }, [
+      '9388850000000000000',
+      ['0xAF984E23EAA3E7967F3C5E007fbe397D8566D23d', '0x3271b574766459a63e811c771fbdA91be08b553e'],
+      '0xb330Ba271c3719a496135011899837612ADA5Bfc',
+      '1672168363',
+    ]);
+
+    const txCall = await _web3.eth.estimateGas({
+      from: _web3Data.address,
+      to: '0xcaA3AF1b19166277dAC631948b5FE94f6A4eD4e8',
+      data: encode,
+      value: '1000000000000000000',
+    });
+
+    console.log('txCall: ', txCall);
+  };
+
+  const shouldUseSupportingFeeOnTransfer = async (
+    type, amountInBN, amountOutMinBN, path, to, deadline
+  ) => {
+    const _web3 = web3.current;
+    const _web3Data = web3Data.current;
+    let methodVanilla, methodSupportFee;
+    let isExactTokens;
+    switch (type) {
+      case 1:
+        methodVanilla = 'swapExactTokensForTokens';
+        methodSupportFee = 'swapExactTokensForTokensSupportingFeeOnTransferTokens';
+        isExactTokens = true;
+        break;
+      case 2:
+        methodVanilla = 'swapExactTokensForETH';
+        methodSupportFee = 'swapExactTokensForETHSupportingFeeOnTransferTokens';
+        isExactTokens = true;
+        break;
+      case 3:
+        methodVanilla = 'swapExactETHForTokens';
+        methodSupportFee = 'swapExactETHForTokensSupportingFeeOnTransferTokens';
+        isExactTokens = false;
+        break;
+      default:
+        methodVanilla = undefined;
+        methodSupportFee = undefined;
+        isExactTokens = undefined;
+        break;
+    };
+    let inputsExactTokens = [], inputsExactETH = [];
+    if (isExactTokens) {
+      inputsExactTokens = [{
+        type: 'uint256',
+        name: 'amountIn',
+      }, {
+        type: 'uint256',
+        name: 'amountOutMin',
+      }, {
+        type: 'address[]',
+        name: 'path',
+      }, {
+        name: "to",
+				type: "address",
+      }, {
+        name: "deadline",
+				type: "uint256",
+      }];
+    } else {
+      inputsExactETH = [{
+        type: 'uint256',
+        name: 'amountOutMin',
+      }, {
+        type: 'address[]',
+        name: 'path',
+      }, {
+        name: "to",
+				type: "address",
+      }, {
+        name: "deadline",
+				type: "uint256",
+      }];
+    }
+    const data = isExactTokens ? [
+      amountInBN,
+      amountOutMinBN,
+      path,
+      to,
+      deadline,
+    ] : [
+      amountOutMinBN,
+      path,
+      to,
+      deadline,
+    ];
+    const encodeVanilla = _web3.eth.abi.encodeFunctionCall({
+      name: methodVanilla,
+      type: 'function',
+      inputs: isExactTokens ? inputsExactTokens : inputsExactETH,
+    }, data);
+    const encodeSupportFee = _web3.eth.abi.encodeFunctionCall({
+      name: methodSupportFee,
+      type: 'function',
+      inputs: isExactTokens ? inputsExactTokens : inputsExactETH,
+    }, data);
+    let error;
+    try {
+      console.log(
+        'methodVanilla: ', methodVanilla,
+        ' isExactTokens: ', isExactTokens,
+        ' data: ', data,
+      );
+      const txEstimateGas = await _web3.eth.estimateGas({
+        from: _web3Data.address,
+        to: Contracts.router.address,
+        data: encodeVanilla,
+        value: isExactTokens ? undefined : amountInBN,
+      });
+      console.log('txEstimateGas: ', txEstimateGas);
+      return false;
+    } catch (err) {
+      error = err;
+    }
+    
+    console.log('error: ', error);
+
+    try {
+      console.log(
+        'methodSupportFee: ', methodSupportFee,
+        ' isExactTokens: ', isExactTokens,
+        ' data: ', data,
+      );
+      await _web3.eth.estimateGas({
+        from: _web3Data.address,
+        to: Contracts.router.address,
+        data: encodeSupportFee,
+        value: isExactTokens ? undefined : amountInBN,
+      });
+      return true;
+    } catch (err) {
+      error = err;
+    }
+    
+    console.log('error: ', error);
+    return error;
+  };
+
   return (
     <BoxWrapper>
       <TableHeader>
@@ -782,6 +1002,7 @@ export default function Swap () {
         Test
       </Button>
       <Button onClick={sendKAI}>Send KAI</Button>
+      <Button onClick={web3Call}>Web3Call</Button>
       <Row>
         <BoxInput
           action='swap'
@@ -827,7 +1048,7 @@ export default function Swap () {
           Approve
         </Button>
         <Button
-          disabled={isWrap.current ? disableWrap : disableSwap}
+          // disabled={isWrap.current ? disableWrap : disableSwap}
           onClick={isWrap.current ? wrapOrUnwrap : swap}
         >
           {
