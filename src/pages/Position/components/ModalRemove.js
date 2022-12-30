@@ -80,16 +80,36 @@ export default function ModalRemove (props) {
         ' address: ', address,
         ' deadline: ', deadline,
       );
-      txRemove = await routerContract.methods
-        .removeLiquidityETH(
-          position.token1Address,
-          outputTokenAmounts.outputTokenPoolWithDecimal,
-          amount1Min,
-          amount0Min,
-          address,
-          deadline
-        )
-        .send({ from: address });
+      const _shouldUseSupportingFeeOnTransfer = await shouldUseSupportingFeeOnTransfer(
+        position.token0Address, outputTokenAmounts.outputTokenPoolWithDecimal, amount0Min, amount1Min, address, deadline
+      );
+      const returnType = typeof _shouldUseSupportingFeeOnTransfer === 'boolean';
+      console.log('_shouldUseSupportingFeeOnTransfer: ', _shouldUseSupportingFeeOnTransfer);
+      if (returnType) {
+        if (_shouldUseSupportingFeeOnTransfer) {
+          txRemove = await routerContract.methods
+            .removeLiquidityETHSupportingFeeOnTransferTokens(
+              position.token1Address,
+              outputTokenAmounts.outputTokenPoolWithDecimal,
+              amount1Min,
+              amount0Min,
+              address,
+              deadline
+            )
+            .send({ from: address });
+        } else {
+          txRemove = await routerContract.methods
+            .removeLiquidityETH(
+              position.token1Address,
+              outputTokenAmounts.outputTokenPoolWithDecimal,
+              amount1Min,
+              amount0Min,
+              address,
+              deadline
+            )
+            .send({ from: address });
+        }
+      }
     } else if (position.token0Address !== NATIVE_TOKEN_ADDRESS && position.token1Address === NATIVE_TOKEN_ADDRESS) {
       console.log(
         'position.token0Address: ', position.token0Address,
@@ -99,16 +119,37 @@ export default function ModalRemove (props) {
         ' address: ', address,
         ' deadline: ', deadline,
       );
-      txRemove = await routerContract.methods
-        .removeLiquidityETH(
-          position.token0Address,
-          outputTokenAmounts.outputTokenPoolWithDecimal,
-          amount0Min,
-          amount1Min,
-          address,
-          deadline
-        )
-        .send({ from: address });
+      const _shouldUseSupportingFeeOnTransfer = await shouldUseSupportingFeeOnTransfer(
+        position.token0Address, outputTokenAmounts.outputTokenPoolWithDecimal, amount0Min, amount1Min, address, deadline
+      );
+      const returnType = typeof _shouldUseSupportingFeeOnTransfer === 'boolean';
+      console.log('_shouldUseSupportingFeeOnTransfer: ', _shouldUseSupportingFeeOnTransfer);
+      if (returnType) {
+        if (_shouldUseSupportingFeeOnTransfer) {
+          // Passed
+          txRemove = await routerContract.methods
+            .removeLiquidityETHSupportingFeeOnTransferTokens(
+              position.token0Address,
+              outputTokenAmounts.outputTokenPoolWithDecimal,
+              amount0Min,
+              amount1Min,
+              address,
+              deadline
+            )
+            .send({ from: address });
+        } else {
+          txRemove = await routerContract.methods
+            .removeLiquidityETH(
+              position.token0Address,
+              outputTokenAmounts.outputTokenPoolWithDecimal,
+              amount0Min,
+              amount1Min,
+              address,
+              deadline
+            )
+            .send({ from: address });
+        }
+      }
       console.log('txRemove: ', txRemove);
     } else {
       console.log(
@@ -140,6 +181,88 @@ export default function ModalRemove (props) {
     setDisableApprove(true);
     setDisableConfirm(true);
     setOutputTokenAmounts();
+  };
+
+  const shouldUseSupportingFeeOnTransfer = async (
+    token, liquidity, amountTokenMin, amountETHMin, to, deadline
+  ) => {
+    const methodVanilla = 'removeLiquidityETH';
+    const methodSupportFee = 'removeLiquidityETHSupportingFeeOnTransferTokens';
+    let inputs = [{
+      type: 'address',
+      name: 'token',
+    }, {
+      type: 'uint256',
+      name: 'liquidity',
+    }, {
+      type: 'uint256',
+      name: 'amountTokenMin',
+    }, {
+      type: 'uint256',
+      name: 'amountETHMin',
+    }, {
+      type: "address",
+      name: "to",
+    }, {
+      type: "uint256",
+      name: "deadline",
+    }];
+
+    const data = [
+      token,
+      liquidity,
+      amountTokenMin,
+      amountETHMin,
+      to,
+      deadline,
+    ];
+    
+    const encodeVanilla = web3.eth.abi.encodeFunctionCall({
+      name: methodVanilla,
+      type: 'function',
+      inputs: inputs,
+    }, data);
+    const encodeSupportFee = web3.eth.abi.encodeFunctionCall({
+      name: methodSupportFee,
+      type: 'function',
+      inputs: inputs
+    }, data);
+    
+    let error;
+    try {
+      console.log(
+        'methodVanilla: ', methodVanilla,
+        ' data: ', data,
+      );
+      await web3.eth.estimateGas({
+        from: address,
+        to: Contracts.router.address,
+        data: encodeVanilla,
+      });
+      return false;
+    } catch (err) {
+      error = err;
+    }
+    
+    console.log('error: ', error);
+
+    try {
+      console.log(
+        'methodSupportFee: ', methodSupportFee,
+        ' data: ', data,
+      );
+      await web3.eth.estimateGas({
+        from: address,
+        to: Contracts.router.address,
+        data: encodeSupportFee,
+      });
+      return true;
+    } catch (err) {
+      error = err;
+    }
+    
+    console.log('error: ', error);
+    return error;
   };
 
   return (
@@ -211,7 +334,7 @@ export default function ModalRemove (props) {
         </Button>
         <Button
           onClick={remove}
-          disabled={disableConfirm}
+          // disabled={disableConfirm}
         >
           Confirm
         </Button>
