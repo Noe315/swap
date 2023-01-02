@@ -590,7 +590,10 @@ export default function Liquidity () {
         <div>Swap</div>
         <ModalSlippage
           show={isModalSlippage}
-          handleClose={() => setIsModalSlippage(false)}
+          handleClose={() => {
+            setIsModalSlippage(false);
+            resetInputs();
+          }}
           ref={slippageAndDeadline}
         />
         <div

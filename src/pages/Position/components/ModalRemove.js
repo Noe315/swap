@@ -6,7 +6,6 @@ import { TableHeader } from '../../../components/styles';
 import { Contracts, DEFAULT_SLIPPAGE, NATIVE_TOKEN_ADDRESS } from '../../../constants/address';
 import { getWeb3, getWeb3Data } from '../../../utils/connectWallet';
 import InputRemove from './InputRemove';
-import ModalHeader from './ModalHeader';
 
 export default function ModalRemove (props) {
   const position = props.positionState;
@@ -19,6 +18,7 @@ export default function ModalRemove (props) {
   const [disableApprove, setDisableApprove] = useState(true);
   const [disableConfirm, setDisableConfirm] = useState(true);
   const [isModalSlippage, setIsModalSlippage] = useState(false);
+  const inputRef = useRef();
 
   useEffect(() => {
     const _web3 = getWeb3();
@@ -265,6 +265,10 @@ export default function ModalRemove (props) {
     return error;
   };
 
+  const resetInput = () => {
+    inputRef.current.resetInput();
+  };
+
   return (
     <Modal
       show={props.show}
@@ -293,7 +297,10 @@ export default function ModalRemove (props) {
           />
           <div
             style={{ marginLeft: 'auto', paddingRight: '1vw' }}
-            onClick={() => setIsModalSlippage(true)}
+            onClick={() => {
+              setIsModalSlippage(true);
+              resetInput();
+            }}
           >
             Slippage {' '}
             {
@@ -306,6 +313,7 @@ export default function ModalRemove (props) {
           </div>
         </TableHeader>
         <InputRemove
+          ref={inputRef}
           position={position}
           setOutputTokenAmounts={setOutputTokenAmounts}
           setDisableApprove={setDisableApprove}
@@ -334,7 +342,7 @@ export default function ModalRemove (props) {
         </Button>
         <Button
           onClick={remove}
-          // disabled={disableConfirm}
+          disabled={disableConfirm}
         >
           Confirm
         </Button>
