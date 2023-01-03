@@ -3,6 +3,7 @@ import Button from 'react-bootstrap/Button';
 import { Modal } from 'react-bootstrap';
 import { InputNumber, Invalid, Warning } from './styles';
 import { DEFAULT_DEADLINE, DEFAULT_SLIPPAGE } from '../constants/address';
+import { blockInvalidChar } from '../utils/helpers';
 
 const ModalSlippage = forwardRef((props, _ref) => {
   const [slippage, setSlippage] = useState(DEFAULT_SLIPPAGE);
@@ -107,6 +108,7 @@ const ModalSlippage = forwardRef((props, _ref) => {
           type='number'
           value={slippage}
           onChange={slippageOnChange}
+          onKeyDown={blockInvalidChar}
         />
         {
           !isValidCharacters
@@ -123,6 +125,7 @@ const ModalSlippage = forwardRef((props, _ref) => {
           type='number'
           value={deadline}
           onChange={deadlineOnChange}
+          onKeyDown={blockInvalidChar}
         />
         minutes
       </Modal.Body>

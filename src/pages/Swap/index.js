@@ -9,6 +9,7 @@ import ModalSlippage from '../../components/ModalSlippage';
 import { Contracts, DECIMAL_PLACES, DEFAULT_SLIPPAGE, KAI_MAINNET_CHAIN_ID, NATIVE_TOKEN_ADDRESS, PROVIDER } from '../../constants/address';
 import { Fetcher, Percent, Token, TokenAmount, Trade } from '@uniswap/sdk';
 import { getWeb3, getWeb3Data } from '../../utils/connectWallet';
+import { sanitizeInput } from '../../utils/helpers';
 
 export default function Swap () {
   const [isInfo, setIsInfo] = useState(false);
@@ -99,18 +100,18 @@ export default function Swap () {
   };
 
   const inputOnChange = async (event) => {
+    const value = event.target.value;
+    // const valueNumber = value.replace(/[^(0-9).]/gm, '');
+    inputValue.current = value;
+    setInputValueState(value);
+    checkInputAgainstBalance(value);
+    
     // const infoTokenIn = tokenIn.current.getTokenInfo();
     // const infoTokenOut = tokenOut.current.getTokenInfo();
     const infoTokenIn = tokenIn.current.getTokenInfo() ? tokenIn.current.getTokenInfo() : tokenIn.current.getNativeTokenInfo();
     const infoTokenOut = tokenOut.current.getTokenInfo() ? tokenOut.current.getTokenInfo() : tokenOut.current.getNativeTokenInfo();
     // const _isWrap = isWrap.current;
     const _isWrap = isWrap;
-
-    const value = event.target.value;
-    const valueNumber = value.replace(/[^(0-9).]/gm, '');
-    inputValue.current = valueNumber;
-    checkInputAgainstBalance(valueNumber);
-    setInputValueState(valueNumber);
     
     if (infoTokenIn && infoTokenOut) {
       if (_isWrap) {
@@ -119,10 +120,10 @@ export default function Swap () {
         shouldWrapButtonDisabled();
       } else {
         shouldApproveButtonDisabled();
-        const trade = findRoute('in', valueNumber * 10 ** infoTokenIn.decimals);
+        const trade = findRoute('in', value * 10 ** infoTokenIn.decimals);
         let tradeInfo = {};
   
-        if (valueNumber) {
+        if (value) {
           setIsInfo(true);
   
           if (trade.length) {
@@ -188,18 +189,18 @@ export default function Swap () {
   };
 
   const outputOnChange = async (event) => {
+    const value = event.target.value;
+    // const valueNumber = value.replace(/[^(0-9).]/gm, '');
+    outputValue.current = value;
+    setOutputValueState(value);
+    checkOutputAgainstBalance(value);
+    
     // const infoTokenIn = tokenIn.current.getTokenInfo();
     // const infoTokenOut = tokenOut.current.getTokenInfo();
     const infoTokenIn = tokenIn.current.getTokenInfo() ? tokenIn.current.getTokenInfo() : tokenIn.current.getNativeTokenInfo();
     const infoTokenOut = tokenOut.current.getTokenInfo() ? tokenOut.current.getTokenInfo() : tokenOut.current.getNativeTokenInfo();
     // const _isWrap = isWrap.current;
     const _isWrap = isWrap;
-
-    const value = event.target.value;
-    const valueNumber = value.replace(/[^(0-9).]/gm, '');
-    outputValue.current = valueNumber;
-    checkOutputAgainstBalance(valueNumber);
-    setOutputValueState(valueNumber);
     
     if (infoTokenIn && infoTokenOut) {
       if (_isWrap) {
@@ -208,10 +209,10 @@ export default function Swap () {
         shouldWrapButtonDisabled();
       } else {
         shouldApproveButtonDisabled();
-        const trade = findRoute('out', valueNumber * 10 ** infoTokenOut.decimals);
+        const trade = findRoute('out', value * 10 ** infoTokenOut.decimals);
         let tradeInfo = {};
   
-        if (valueNumber) {
+        if (value) {
           setIsInfo(true);
           
           if (trade.length) {
