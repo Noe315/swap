@@ -139,6 +139,7 @@ import {
 // import { getWeb3, getWeb3Data } from '../utils/connectWallet';
 import SelectToken from './SelectToken/index';
 import { DECIMAL_PLACES } from '../constants/address';
+import { blockInvalidChar } from '../utils/helpers';
 
 const BoxInput = forwardRef((props, _ref) => {
   const token = useRef();
@@ -246,8 +247,10 @@ const BoxInput = forwardRef((props, _ref) => {
 
           <SwapBoxInputArea>
             <Input
+              type="number"
               placeholder='0.00'
               onChange={props.onChange}
+              onKeyDown={blockInvalidChar}
               value={props.value}
             />
             <Button

@@ -59,18 +59,13 @@ export default function Liquidity () {
     setAddress(addresses[0]);
   };
 
-  // const sanitizeInput = (value) => {
-  //   const sanitized = value.replace(/[^0-9(\.)]/g, '');
-  //   return sanitized;
-  // }
-
   const inputOnChange = async (event) => {
     // const infoTokenIn = tokenIn.current.getTokenInfo();
     // const infoTokenOut = tokenOut.current.getTokenInfo();
     const infoTokenIn = tokenIn.current.getTokenInfo() ? tokenIn.current.getTokenInfo() : tokenIn.current.getNativeTokenInfo();
     const infoTokenOut = tokenOut.current.getTokenInfo() ? tokenOut.current.getTokenInfo() : tokenOut.current.getNativeTokenInfo();
     const value = event.target.value;
-    // const valueSanitized = sanitizeInput(value);
+    // const value = sanitizeInput(event.target.value);
     checkInputAgainstBalance(value);
 
     // if (pair.current.addressTokenIn && pair.current.addressTokenOut) {
@@ -130,6 +125,7 @@ export default function Liquidity () {
     const infoTokenIn = tokenIn.current.getTokenInfo() ? tokenIn.current.getTokenInfo() : tokenIn.current.getNativeTokenInfo();
     const infoTokenOut = tokenOut.current.getTokenInfo() ? tokenOut.current.getTokenInfo() : tokenOut.current.getNativeTokenInfo();
     const value = event.target.value;
+    // const value = sanitizeInput(event.target.value);
     checkOutputAgainstBalance(value);
 
     // if (pair.current.addressTokenIn && pair.current.addressTokenOut) {

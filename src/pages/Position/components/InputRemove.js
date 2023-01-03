@@ -92,6 +92,7 @@
 import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import { RemoveInput } from '../../../components/styles';
 import { getWeb3 } from '../../../utils/connectWallet';
+import { blockInvalidChar } from '../../../utils/helpers';
 
 const InputRemove = forwardRef((props, _ref) => {
   const position = props.position;
@@ -184,6 +185,7 @@ const InputRemove = forwardRef((props, _ref) => {
         placeholder='0'
         value={inputValue}
         onChange={checkInput}
+        onKeyDown={blockInvalidChar}
       />
     </>
   );
