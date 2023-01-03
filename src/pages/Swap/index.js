@@ -32,8 +32,8 @@ export default function Swap () {
   const [isRouteExist, setIsRouteExist] = useState(true);
   // const [swapInfo, setSwapInfo] = useState();
   const swapInfo = useRef();
-  // const [isWrap, setIsWrap] = useState(false);
-  const isWrap = useRef(false);
+  const [isWrap, setIsWrap] = useState(false);
+  // const isWrap = useRef(false);
   const [disableWrap, setDisableWrap] = useState(true);
 
   useEffect(() => {
@@ -103,7 +103,8 @@ export default function Swap () {
     // const infoTokenOut = tokenOut.current.getTokenInfo();
     const infoTokenIn = tokenIn.current.getTokenInfo() ? tokenIn.current.getTokenInfo() : tokenIn.current.getNativeTokenInfo();
     const infoTokenOut = tokenOut.current.getTokenInfo() ? tokenOut.current.getTokenInfo() : tokenOut.current.getNativeTokenInfo();
-    const _isWrap = isWrap.current;
+    // const _isWrap = isWrap.current;
+    const _isWrap = isWrap;
 
     const value = event.target.value;
     const valueNumber = value.replace(/[^(0-9).]/gm, '');
@@ -191,7 +192,8 @@ export default function Swap () {
     // const infoTokenOut = tokenOut.current.getTokenInfo();
     const infoTokenIn = tokenIn.current.getTokenInfo() ? tokenIn.current.getTokenInfo() : tokenIn.current.getNativeTokenInfo();
     const infoTokenOut = tokenOut.current.getTokenInfo() ? tokenOut.current.getTokenInfo() : tokenOut.current.getNativeTokenInfo();
-    const _isWrap = isWrap.current;
+    // const _isWrap = isWrap.current;
+    const _isWrap = isWrap;
 
     const value = event.target.value;
     const valueNumber = value.replace(/[^(0-9).]/gm, '');
@@ -361,10 +363,15 @@ export default function Swap () {
 
   const shouldWrapButtonDisabled = () => {
     const infoTokenIn = tokenIn.current.getTokenInfo() ? tokenIn.current.getTokenInfo() : tokenIn.current.getNativeTokenInfo();
+    const infoTokenOut = tokenOut.current.getTokenInfo() ? tokenOut.current.getTokenInfo() : tokenOut.current.getNativeTokenInfo();
 
-    if (infoTokenIn) {
+    if (infoTokenIn && infoTokenOut) {
       if (inputValue.current && inputValue.current <= infoTokenIn.balance) {
-        setDisableWrap(false);
+        if (!infoTokenIn.address && !infoTokenOut.address) {
+          setDisableWrap(true);
+        } else {
+          setDisableWrap(false);
+        }
       } else {
         setDisableWrap(true);
       }
@@ -379,23 +386,24 @@ export default function Swap () {
 
     if (infoTokenIn && infoTokenOut) {
       if (infoTokenIn.address && infoTokenOut.address) {
-        // setIsWrap(false);
-        isWrap.current = false;
+        setIsWrap(false);
+        // isWrap.current = false;
         if (infoTokenIn.address === infoTokenOut.address) {
           setIsAddressSame(true);
         } else {
           setIsAddressSame(false);
         }
       } else if (infoTokenIn.address && !infoTokenOut.address) {    // From WKAI to KAI
-        isWrap.current = infoTokenIn.address === NATIVE_TOKEN_ADDRESS;
+        // isWrap.current = infoTokenIn.address === NATIVE_TOKEN_ADDRESS;
+        setIsWrap(infoTokenIn.address === NATIVE_TOKEN_ADDRESS);
         setIsAddressSame(false);
       } else if (!infoTokenIn.address && infoTokenOut.address) {    // From KAI to WKAI
-        // setIsWrap(true);
-        isWrap.current = infoTokenOut.address === NATIVE_TOKEN_ADDRESS;
+        // isWrap.current = infoTokenOut.address === NATIVE_TOKEN_ADDRESS;
+        setIsWrap(infoTokenOut.address === NATIVE_TOKEN_ADDRESS);
         setIsAddressSame(false);
       } else {
-        // setIsWrap(true);
-        isWrap.current = true;
+        // isWrap.current = false;
+        setIsWrap(false);
         setIsAddressSame(true);
       }
     }
@@ -408,9 +416,9 @@ export default function Swap () {
     outputValue.current = '';
     setInputValueState('');
     setOutputValueState('');
-    if (isWrap.current) {
+    // if (isWrap.current) {
       shouldApproveButtonDisabled();
-    }
+    // }
     setIsInfo(false);
   }
 
@@ -961,7 +969,10 @@ export default function Swap () {
         <div>Swap</div>
         <ModalSlippage
           show={isModalSlippage}
-          handleClose={() => setIsModalSlippage(false)}
+          handleClose={() => {
+            setIsModalSlippage(false);
+            resetInputs();
+          }}
           ref={slippageAndDeadline}
         />
         <div
@@ -1032,27 +1043,42 @@ export default function Swap () {
       </Row>
       <Row>
         {
-          isAddressSame
-            ? <div style={{ color: 'red' }}>
-                Addresses of input token and output token are the same,
-                please use different addresses.
-              </div>
-            : ''
+          /* isAddressSame && !isWrap.current */
+          isAddressSame && !isWrap
+          ? (
+            <div style={{ color: 'red' }}>
+              Addresses of input token and output token are the same,
+              please use different addresses.
+            </div>
+          ) : ''
         }
       </Row>
       <Row>
         <Button
-          disabled={isWrap.current ? true : disableApprove}
+          // disabled={isWrap.current ? true : disableApprove}
+          disabled={isWrap ? true : disableApprove}
           onClick={approveTokens}
         >
           Approve
         </Button>
         <Button
           // disabled={isWrap.current ? disableWrap : disableSwap}
-          onClick={isWrap.current ? wrapOrUnwrap : swap}
+          disabled={
+            // isWrap.current
+            isWrap
+            ? disableWrap
+            : swapInfo.current
+              ? swapInfo.current.priceImpact >= 15
+                ? true
+                : false
+              : true
+          }
+          // onClick={isWrap.current ? wrapOrUnwrap : swap}
+          onClick={isWrap ? wrapOrUnwrap : swap}
         >
           {
-            isWrap.current
+            /* isWrap.current */
+            isWrap
             ? 'Wrap/Unwrap'
             : swapInfo.current
               ? swapInfo.current.priceImpact >= 15
