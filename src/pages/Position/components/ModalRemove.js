@@ -97,6 +97,10 @@ export default function ModalRemove (props) {
               deadline
             )
             .send({ from: address });
+
+          if (txRemove.status) {
+            window.location.reload();
+          }
         } else {
           txRemove = await routerContract.methods
             .removeLiquidityETH(
@@ -108,6 +112,10 @@ export default function ModalRemove (props) {
               deadline
             )
             .send({ from: address });
+
+          if (txRemove.status) {
+            window.location.reload();
+          }
         }
       }
     } else if (position.token0Address !== NATIVE_TOKEN_ADDRESS && position.token1Address === NATIVE_TOKEN_ADDRESS) {
@@ -137,6 +145,10 @@ export default function ModalRemove (props) {
               deadline
             )
             .send({ from: address });
+
+          if (txRemove.status) {
+            window.location.reload();
+          }
         } else {
           txRemove = await routerContract.methods
             .removeLiquidityETH(
@@ -148,6 +160,10 @@ export default function ModalRemove (props) {
               deadline
             )
             .send({ from: address });
+
+          if (txRemove.status) {
+            window.location.reload();
+          }
         }
       }
       console.log('txRemove: ', txRemove);
@@ -172,6 +188,10 @@ export default function ModalRemove (props) {
           deadline
         )
         .send({ from: address });
+
+      if (txRemove.status) {
+        window.location.reload();
+      }
     }  
     console.log('txRemove: ', txRemove);
   };
