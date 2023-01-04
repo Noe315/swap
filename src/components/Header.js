@@ -1,5 +1,4 @@
-// import React, { useEffect, useRef, useState } from 'react'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import Navbar from 'react-bootstrap/Navbar'
 import Container from 'react-bootstrap/Container'
 import Nav from 'react-bootstrap/Nav'
@@ -10,43 +9,20 @@ import { shortenAddress } from '../utils/helpers';
 
 export default function Header () {
   const [accountAddress, setAccountAddress] = useState('');
-  // const accountAddress = useRef('');
-  const [account, setAccount] = useState();
-  // const account = useRef();
+  const account = useRef();
 
   const getWeb3Data = async () => {    
     await connectToMetamask();
 
     const accounts = await getAccounts();
-    setAccount(accounts[0]);
+    account.current = accounts[0];
 
-    const _accountAddress = account ? shortenAddress(account) : '';
+    const _accountAddress = account.current ? shortenAddress(account.current) : '';
     setAccountAddress(_accountAddress);
   };
 
-  // const setAddress = async () => {
-  //   const accounts = await getAccounts();
-  //   // setAccount(accounts[0]);
-  //   account.current = accounts[0];
-  //   const _accountAddress = account.current ? shortenAddress(account.current) : '';
-  //   // setAccountAddress(_accountAddress);
-  //   accountAddress.current = _accountAddress;
-  //   console.log('hello');
-  // }
-
-  // const connectWallet = async () => {
-  //   console.log('account: ', account, ' accountAddress: ', accountAddress);
-  //   await connectToMetamask();
-  //   const accounts = await getAccounts();
-  //   setAccount(accounts[0]);
-  //   const _accountAddress = account ? shortenAddress(account) : '';
-  //   setAccountAddress(_accountAddress);
-  //   setAddress();
-  // };
-
   useEffect(() => {
     getWeb3Data();
-    // setAddress();
   },[]);
 
   return (
@@ -76,9 +52,7 @@ export default function Header () {
           </NavDropdown>
         </Nav>
         <Button onClick={() => connectToMetamask()}>
-        {/* <Button onClick={connectWallet}> */}
-            {accountAddress === '' ? 'Connect wallet' : accountAddress}
-            {/* {accountAddress.current === '' ? 'Connect wallet' : accountAddress.current} */}
+          {accountAddress === '' ? 'Connect wallet' : accountAddress}
         </Button>
       </Container>
     </Navbar>
