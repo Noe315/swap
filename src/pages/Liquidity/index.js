@@ -440,18 +440,24 @@ export default function Liquidity () {
     const infoTokenIn = tokenIn.current.getTokenInfo() ? tokenIn.current.getTokenInfo() : tokenIn.current.getNativeTokenInfo();
     const infoTokenOut = tokenOut.current.getTokenInfo() ? tokenOut.current.getTokenInfo() : tokenOut.current.getNativeTokenInfo();
     const BN = web3.utils.BN;
-    // const tokenInDecimal = await contractTokenIn.methods.decimals().call();
-    // const tokenOutDecimal = await contractTokenOut.methods.decimals().call();
+
     const tokenInDecimal = infoTokenIn.address ? await contractTokenIn.methods.decimals().call() : NATIVE_TOKEN_DECIMAL;
     const tokenOutDecimal = infoTokenOut.address ? await contractTokenOut.methods.decimals().call() : NATIVE_TOKEN_DECIMAL;
     const _slippage = slippageAndDeadline.current.getSlippage();
 
-    // const amountInRounded = Math.round(inputValue.current * 10 ** tokenInDecimal);
-    // const amountOutRounded = Math.round(outputValue.current * 10 ** tokenOutDecimal);
-    const amountIn = new BN(inputValue.current).mul(new BN(10).pow(new BN(tokenInDecimal))).toString();
-    const amountOut = new BN(outputValue.current).mul(new BN(10).pow(new BN(tokenOutDecimal))).toString();
-    // const amountInMinBN = amountInBN.mul(new BN(10000).sub(new BN(_slippage * 10000))).div(new BN(10000));
-    // const amountOutMinBN = amountOutBN.mul(new BN(10000).sub(new BN(_slippage * 10000))).div(new BN(10000));
+    // const amountIn = new BN(inputValue.current).mul(new BN(10).pow(new BN(tokenInDecimal))).toString();
+    const amountIn = new BN((inputValue.current * 10 ** tokenInDecimal).toString())
+      .mul(new BN(10)
+      .pow(new BN(tokenInDecimal)))
+      .div(new BN((10 ** tokenInDecimal).toString()))
+      .toString();
+    // const amountOut = new BN(outputValue.current).mul(new BN(10).pow(new BN(tokenOutDecimal))).toString();
+    const amountOut = new BN((outputValue.current * 10 ** tokenOutDecimal).toString())
+      .mul(new BN(10)
+      .pow(new BN(tokenOutDecimal)))
+      .div(new BN((10 ** tokenOutDecimal).toString()))
+      .toString();
+
     const amountInMin = new BN(amountIn)
       .sub(new BN(amountIn)
         .mul(new BN((_slippage * 100).toString()))
@@ -483,7 +489,7 @@ export default function Liquidity () {
     );
 
     if (infoTokenIn.address && infoTokenOut.address) {
-      await contracts.router.methods.addLiquidity(
+      const txAddLiquidity = await contracts.router.methods.addLiquidity(
         // pair.current.addressTokenIn,
         // pair.current.addressTokenOut,
         infoTokenIn.address,
@@ -499,6 +505,10 @@ export default function Liquidity () {
         address,
         deadline
       ).send({ from: address });
+
+      if (txAddLiquidity.status) {
+        window.location.reload();
+      }
     } else if (infoTokenIn.address && !infoTokenOut.address) {
       console.log(
         'infoTokenIn.address: ', infoTokenIn.address,
@@ -507,7 +517,7 @@ export default function Liquidity () {
         ' amountOut: ', amountOut,
         ' amountOutMin: ', amountOutMin,
       );
-      await contracts.router.methods.addLiquidityETH(
+      const txAddLiquidityETH = await contracts.router.methods.addLiquidityETH(
         infoTokenIn.address,
         amountIn,
         amountInMin,
@@ -516,6 +526,10 @@ export default function Liquidity () {
         deadline,
       )
       .send({ from: address, value: amountOut });
+
+      if (txAddLiquidityETH.status) {
+        window.location.reload();
+      }
     } else if (!infoTokenIn.address && infoTokenOut.address) {
       console.log(
         'infoTokenOut.address: ', infoTokenOut.address,
@@ -524,7 +538,7 @@ export default function Liquidity () {
         ' amountOut: ', amountOut,
         ' amountOutMin: ', amountOutMin,
       );
-      await contracts.router.methods.addLiquidityETH(
+      const txAddLiquidityETH = await contracts.router.methods.addLiquidityETH(
         infoTokenOut.address,
         amountOut,
         amountOutMin,
@@ -533,6 +547,10 @@ export default function Liquidity () {
         deadline,
       )
       .send({ from: address, value: amountIn });
+
+      if (txAddLiquidityETH.status) {
+        window.location.reload();
+      }
     }
 
     // await contracts.router.methods.addLiquidity(

@@ -643,6 +643,10 @@ export default function Swap () {
                 deadline,
               )
               .send({ from: _web3Data.address, value: amountInBN });
+            
+            if (txSwapExactIn.status) {
+              window.location.reload();
+            }
           } else {
             txSwapExactIn = await routerContract.methods
               .swapExactETHForTokens(
@@ -652,6 +656,10 @@ export default function Swap () {
                 deadline,
               )
               .send({ from: _web3Data.address, value: amountInBN });
+            
+            if (txSwapExactIn.status) {
+              window.location.reload();
+            }
           }
         }
       } else if (infoTokenIn.address && !infoTokenOut.address) {
@@ -672,6 +680,10 @@ export default function Swap () {
                 deadline,
               )
               .send({ from: _web3Data.address });
+
+            if (txSwapExactIn.status) {
+              window.location.reload();
+            }
           } else {
             txSwapExactIn = await routerContract.methods
               .swapExactTokensForETH(
@@ -682,6 +694,10 @@ export default function Swap () {
                 deadline,
               )
               .send({ from: _web3Data.address });
+
+            if (txSwapExactIn.status) {
+              window.location.reload();
+            }
           }
         }
       } else if (infoTokenIn.address && infoTokenOut.address) {
@@ -702,6 +718,10 @@ export default function Swap () {
                 deadline,
               )
               .send({ from: _web3Data.address });
+
+            if (txSwapExactIn.status) {
+              window.location.reload();
+            }
           } else {
             txSwapExactIn = await routerContract.methods
               .swapExactTokensForTokens(
@@ -712,6 +732,10 @@ export default function Swap () {
                 deadline,
               )
               .send({ from: _web3Data.address });
+
+            if (txSwapExactIn.status) {
+              window.location.reload();
+            }
           }
         }
       }
@@ -728,6 +752,10 @@ export default function Swap () {
             deadline,
           )
           .send({ from : _web3Data.address, value: amountInMaxBN });
+
+        if (txExactOut.status) {
+          window.location.reload();
+        }
       } else if (infoTokenIn.address && !infoTokenOut.address) {
         // Passed
         txExactOut = await routerContract.methods
@@ -739,6 +767,10 @@ export default function Swap () {
             deadline,
           )
           .send({ from : _web3Data.address });
+
+        if (txExactOut.status) {
+          window.location.reload();
+        }
       } else if (infoTokenIn.address && infoTokenOut.address) {
         txExactOut = await routerContract.methods
           .swapTokensForExactTokens(
@@ -749,6 +781,10 @@ export default function Swap () {
             deadline,
           )
           .send({ from : _web3Data.address });
+
+        if (txExactOut.status) {
+          window.location.reload();
+        }
       }
       console.log('txExactOut: ', txExactOut);
     }
@@ -791,12 +827,20 @@ export default function Swap () {
       const txUnwrap = await wkaiContract.methods
         .withdraw(_web3.utils.toWei(inputValue.current, 'ether'))
         .send({ from: _web3Data.address});
+
+      if (txUnwrap.status) {
+        window.location.reload();
+      }
       console.log('txWrap: ', txUnwrap);
     } else {
       const txWrap = await wkaiContract.methods.deposit().send({
         from: _web3Data.address,
         value: _web3.utils.toWei(inputValue.current, 'ether'),
       });
+
+      if (txWrap.status) {
+        window.location.reload();
+      }
       console.log('txWrap: ', txWrap);
     }
   };
