@@ -9,7 +9,7 @@ import ModalSlippage from '../../components/ModalSlippage';
 import { Contracts, DECIMAL_PLACES, DEFAULT_SLIPPAGE, KAI_MAINNET_CHAIN_ID, NATIVE_TOKEN_ADDRESS, PROVIDER } from '../../constants/address';
 import { Fetcher, Percent, Token, TokenAmount, Trade } from '@uniswap/sdk';
 import { getWeb3, getWeb3Data } from '../../utils/connectWallet';
-import { sanitizeInput } from '../../utils/helpers';
+import LoadingSpinner from '../../components/LoadingSpinner';
 
 export default function Swap () {
   const [isInfo, setIsInfo] = useState(false);
@@ -36,6 +36,7 @@ export default function Swap () {
   const [isWrap, setIsWrap] = useState(false);
   // const isWrap = useRef(false);
   const [disableWrap, setDisableWrap] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const _web3 = getWeb3();
@@ -49,9 +50,14 @@ export default function Swap () {
     const _getPairs = async () => {
       const _pairs = await getPairs();
       pairs.current = _pairs;
+      if (pairs.current) {
+        setIsLoading(false);
+      }
     };
 
-    _getWeb3Data().then(() => _getPairs());
+    _getWeb3Data().then(
+      () => _getPairs()
+    );
   }, []);
 
   const getPairs = async () => {
@@ -1059,82 +1065,90 @@ export default function Swap () {
       </Button>
       <Button onClick={sendKAI}>Send KAI</Button>
       <Button onClick={web3Call}>Web3Call</Button>
-      <Row>
-        <BoxInput
-          action='swap'
-          value={inputValueState}
-          onChange={inputOnChange}
-          onTokenSelect={onTokenSelect}
-          name='inputToken'
-          ref={tokenIn}
-        />
-      </Row>
-      <Row>
-        <BoxInput
-          action='swap'
-          value={outputValueState}
-          onChange={outputOnChange}
-          onTokenSelect={onTokenSelect}
-          name='outputToken'
-          ref={tokenOut}
-        />
-      </Row>
-      <Row>
-        <BoxInfo
-          isInfo={isInfo}
-          isRouteExist={isRouteExist}
-          swapInfo={swapInfo.current}
-        />
-      </Row>
-      <Row>
-        {
-          /* isAddressSame && !isWrap.current */
-          isAddressSame && !isWrap
-          ? (
-            <div style={{ color: 'red' }}>
-              Addresses of input token and output token are the same,
-              please use different addresses.
-            </div>
-          ) : ''
-        }
-      </Row>
-      <Row>
-        <Button
-          // disabled={isWrap.current ? true : disableApprove}
-          disabled={isWrap ? true : disableApprove}
-          onClick={approveTokens}
-        >
-          Approve
-        </Button>
-        <Button
-          // disabled={isWrap.current ? disableWrap : disableSwap}
-          disabled={
-            // isWrap.current
-            isWrap
-            ? disableWrap
-            : swapInfo.current
-              ? swapInfo.current.priceImpact >= 15
-                ? true
-                : false
-              : true
-          }
-          // onClick={isWrap.current ? wrapOrUnwrap : swap}
-          onClick={isWrap ? wrapOrUnwrap : swap}
-        >
-          {
-            /* isWrap.current */
-            isWrap
-            ? 'Wrap/Unwrap'
-            : swapInfo.current
-              ? swapInfo.current.priceImpact >= 15
-                ? 'Price impact too high'
-                : swapInfo.current.priceImpact >= 5
-                  ? 'Swap anyway'
-                  : 'Swap'
-              : 'Swap'
-          }
-        </Button>
-      </Row>
+      {
+        isLoading
+        ? <LoadingSpinner />
+        : (
+          <>
+            <Row>
+              <BoxInput
+                action='swap'
+                value={inputValueState}
+                onChange={inputOnChange}
+                onTokenSelect={onTokenSelect}
+                name='inputToken'
+                ref={tokenIn}
+              />
+            </Row>
+            <Row>
+              <BoxInput
+                action='swap'
+                value={outputValueState}
+                onChange={outputOnChange}
+                onTokenSelect={onTokenSelect}
+                name='outputToken'
+                ref={tokenOut}
+              />
+            </Row>
+            <Row>
+              <BoxInfo
+                isInfo={isInfo}
+                isRouteExist={isRouteExist}
+                swapInfo={swapInfo.current}
+              />
+            </Row>
+            <Row>
+              {
+                /* isAddressSame && !isWrap.current */
+                isAddressSame && !isWrap
+                ? (
+                  <div style={{ color: 'red' }}>
+                    Addresses of input token and output token are the same,
+                    please use different addresses.
+                  </div>
+                ) : ''
+              }
+            </Row>
+            <Row>
+              <Button
+                // disabled={isWrap.current ? true : disableApprove}
+                disabled={isWrap ? true : disableApprove}
+                onClick={approveTokens}
+              >
+                Approve
+              </Button>
+              <Button
+                // disabled={isWrap.current ? disableWrap : disableSwap}
+                disabled={
+                  // isWrap.current
+                  isWrap
+                  ? disableWrap
+                  : swapInfo.current
+                    ? swapInfo.current.priceImpact >= 15
+                      ? true
+                      : false
+                    : true
+                }
+                // onClick={isWrap.current ? wrapOrUnwrap : swap}
+                onClick={isWrap ? wrapOrUnwrap : swap}
+              >
+                {
+                  /* isWrap.current */
+                  isWrap
+                  ? 'Wrap/Unwrap'
+                  : swapInfo.current
+                    ? swapInfo.current.priceImpact >= 15
+                      ? 'Price impact too high'
+                      : swapInfo.current.priceImpact >= 5
+                        ? 'Swap anyway'
+                        : 'Swap'
+                    : 'Swap'
+                }
+              </Button>
+            </Row>
+          </>
+        )
+      }
     </BoxWrapper>
   );
 }
