@@ -6,17 +6,19 @@ import { Button } from 'react-bootstrap';
 import { getAccounts, getWeb3, loadSmartContracts } from '../../utils/connectWallet';
 import { Contracts, DECIMAL_PLACES } from '../../constants/address';
 import ModalRemove from './components/ModalRemove';
+import LoadingSpinner from '../../components/LoadingSpinner';
 
 export default function Position () {
   const MINIMUM_LIQUIDITY = 1000;
   const web3 = useRef();
   const contracts = useRef();
   const address = useRef();
-  const [allPairs, setAllPairs] = useState();
   const [positions, setPositions] = useState([]);
   const [positionState, setPositionState] = useState();
   const run = useRef(true);
   const [isModalRemove, setIsModalRemove] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const isUserHasLiquidity = useRef(true);
   
   useEffect(() => {
     getWeb3Data();
@@ -42,20 +44,27 @@ export default function Position () {
       console.log('_contracts: ', _contracts);
       
       const _allPairs = [];
+      let _positions;
       const allPairsLength = await factoryContract.methods.allPairsLength().call();
       for (let i = 0; i < allPairsLength; i++) {
         const pair = await factoryContract.methods.allPairs(i).call();
         _allPairs.push(pair);
         
-        await getPositions(pair);
+        _positions = await getPositions(pair);
       }
-      setAllPairs(_allPairs);
+      setIsLoading(false);
+      if (_positions.length) {
+        isUserHasLiquidity.current = true;
+      } else {
+        isUserHasLiquidity.current = false;
+      }
     }
   };
 
   const getPositions = async (pair) => {
     const _web3 = web3.current;
     const BN = _web3.utils.BN;
+    const _positions = positions;
 
     const pairContract = new _web3.eth.Contract(Contracts.uniswapV2Pair.abi, pair);
     const position = {
@@ -166,12 +175,12 @@ export default function Position () {
         position.token1AmountRounded = parseInt(position.token1AmountWithoutDecimal * (10 ** token1Decimal)) / (10 ** token1Decimal);
       }
 
-      const _positions = positions;
+      // const _positions = positions;
       _positions.push(position);
       setPositions(_positions);
-      // setPositions([...positions, position]);
-      // positions.current.push(position);
     }
+
+    return _positions;
   };
 
   const showModalRemove = (position) => {
@@ -188,6 +197,13 @@ export default function Position () {
       />
       {/* <TableHeader action="position" /> */}
       <TableHeader />
+      {
+        isLoading
+          ? <LoadingSpinner />
+          : isUserHasLiquidity.current
+            ? ''
+            : <div>You have not provided liquidity</div>
+      }
       {
         positions
           ? positions.map((position, index) => {
