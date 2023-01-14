@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import BoxWrapper from '../../components/BoxWrapper';
 import TableHeader from './components/TableHeader';
-import { Row } from '../../components/styles';
+import { Row, Text } from '../../components/styles';
 import { Button } from 'react-bootstrap';
 import { getAccounts, getWeb3, loadSmartContracts } from '../../utils/connectWallet';
 import { Contracts, DECIMAL_PLACES } from '../../constants/address';
@@ -209,20 +209,21 @@ export default function Position () {
           ? positions.map((position, index) => {
             return (
               <Row key={`row-${index}`}>
-                <div>
-                  <h5>{position.token0Name} - {position.token1Name}</h5>
-                  <div>
+                <Text>
+                  <h5 style={{color: '#c3c3c3'}}>{position.token0Name} - {position.token1Name}</h5>
+                  <Text>
                     {/* {position.token0AmountWithoutDecimal} {position.token0Name} | {' '}
                     {position.token1AmountWithoutDecimal} {position.token1Name} | {' '} */}
                     {position.token0AmountRounded} {position.token0Name} | {' '}
                     {position.token1AmountRounded} {position.token1Name} | {' '}
                     {/* Pool share: {position.poolShare}% */}
                     Pool share: {position.poolShareDisplay}%
-                  </div>
-                </div>
+                  </Text>
+                </Text>
                 <Button
                   style={{ height: '3vw' }}
                   onClick={() => showModalRemove(position)}
+                  variant='danger'
                 >
                   Remove
                 </Button>

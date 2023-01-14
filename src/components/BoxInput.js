@@ -133,7 +133,8 @@ import {
   SwapBoxInput,
   SwapBoxInputArea,
   SwapBoxInputTitle,
-  SwapBoxInputWrapper
+  SwapBoxInputWrapper,
+  Text
 } from './styles';
 // import { Contracts } from '../constants/address';
 // import { getWeb3, getWeb3Data } from '../utils/connectWallet';
@@ -228,7 +229,7 @@ const BoxInput = forwardRef((props, _ref) => {
         <SwapBoxInput>
           <SwapBoxInputTitle>
             {/* <div>Balance: {balance ? balance : '0'}</div> */}
-            <div>
+            <Text>
               Balance: {' '}
               {
                 /* tokenInfo.current
@@ -242,7 +243,7 @@ const BoxInput = forwardRef((props, _ref) => {
                   ? parseFloat(nativeTokenInfoState.balance * 10 ** DECIMAL_PLACES) / (10 ** DECIMAL_PLACES)
                   : '0'
               }
-            </div>
+            </Text>
           </SwapBoxInputTitle>
 
           <SwapBoxInputArea>
@@ -251,11 +252,14 @@ const BoxInput = forwardRef((props, _ref) => {
               placeholder='0.00'
               onChange={props.onChange}
               onKeyDown={blockInvalidChar}
+              onWheel={e => e.target.blur()}
               value={props.value}
+              style={{flex: '80%'}}
             />
             <Button
-              style={{ marginLeft: 'auto' }}
+              style={{ marginLeft: 'auto', flex: '20%' }}
               onClick={showSelectToken}
+              variant='outline-secondary'
             >
               {/* {token.current ? token.current : 'Select Token'} */}
               {

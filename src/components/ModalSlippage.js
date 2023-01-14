@@ -1,7 +1,7 @@
 import { forwardRef, useImperativeHandle, useState } from 'react';
 import Button from 'react-bootstrap/Button';
 import { Modal } from 'react-bootstrap';
-import { InputNumber, Invalid, Warning } from './styles';
+import { InputNumber, Invalid, ModalSlippageBody, ModalSlippageBodyRow, ModalSlippageHeader, Warning } from './styles';
 import { DEFAULT_DEADLINE, DEFAULT_SLIPPAGE } from '../constants/address';
 import { blockInvalidChar } from '../utils/helpers';
 
@@ -100,35 +100,56 @@ const ModalSlippage = forwardRef((props, _ref) => {
     <Modal
       show={props.show}
       onHide={onHideModal}
+      dialogClassName='modal-79percent-width'
     >
-      <Modal.Header>Transaction Settings</Modal.Header>
-      <Modal.Body>
-        Slippage Tolerance (in % and must be less than 50)
-        <InputNumber
-          type='number'
-          value={slippage}
-          onChange={slippageOnChange}
-          onKeyDown={blockInvalidChar}
-        />
-        {
-          !isValidCharacters
-            ? (<Invalid>Invalid input</Invalid>)
-              : isFrontrunRisk
-              ? (<Warning>Frontrun risk</Warning>)
-              : ''
-        }
-        <Button onClick={() => {setSlippage(DEFAULT_SLIPPAGE)}}>Auto</Button>
-      </Modal.Body>
-      <Modal.Body>
-        <div>Transaction deadline</div>
-        <InputNumber
-          type='number'
-          value={deadline}
-          onChange={deadlineOnChange}
-          onKeyDown={blockInvalidChar}
-        />
-        minutes
-      </Modal.Body>
+      <ModalSlippageHeader>Transaction Settings</ModalSlippageHeader>
+      <ModalSlippageBody>
+        {/* <div style={{display: 'flex', flexDirection: 'column'}}> */}
+        <ModalSlippageBodyRow>
+          <div>Slippage Tolerance (in % and must be less than 50)</div>
+          <div style={{display: 'flex'}}>
+            <InputNumber
+              type='number'
+              value={slippage}
+              onChange={slippageOnChange}
+              onKeyDown={blockInvalidChar}
+              style={{flex: '80%'}}
+            />
+            <Button
+              onClick={() => {setSlippage(DEFAULT_SLIPPAGE)}}
+              variant='secondary'
+              style={{flex: '20%'}}
+            >
+              Auto
+            </Button>
+          </div>
+          {
+            !isValidCharacters
+              ? (<Invalid>Invalid input</Invalid>)
+                : isFrontrunRisk
+                ? (<Warning>Frontrun risk</Warning>)
+                : ''
+          }
+        </ModalSlippageBodyRow>
+        {/* </div> */}
+      </ModalSlippageBody>
+      <ModalSlippageBody style={{borderRadius: '0px 0px 0.5rem 0.5rem'}}>
+        {/* <div style={{display: 'flex', flexDirection: 'column'}}> */}
+        <ModalSlippageBodyRow>
+          <div>Transaction deadline</div>
+          <div style={{display: 'flex', alignItems: 'center'}}>
+            <InputNumber
+              type='number'
+              value={deadline}
+              onChange={deadlineOnChange}
+              onKeyDown={blockInvalidChar}
+              style={{flex: '80%'}}
+            />
+            <div style={{flex: '20%'}}>minutes</div>
+          </div>
+        </ModalSlippageBodyRow>
+        {/* </div> */}
+      </ModalSlippageBody>
     </Modal>
   );
 });

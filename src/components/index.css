@@ -1,3 +1,7 @@
 .popover-arrow {
   display: none !important;
 }
+
+.modal-79percent-width {
+  width: 30%;
+}
