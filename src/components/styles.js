@@ -1,3 +1,4 @@
+import { Modal } from 'react-bootstrap';
 import styled from 'styled-components/macro';
 import './index.css';
 
@@ -6,6 +7,7 @@ export const SwapBoxInputWrapper = styled.div`
   padding: 1vw;
   border: 1px solid;
   border-radius: 15px;
+  border-color: gray;
 `;
 
 export const SwapBoxInput = styled.div`
@@ -20,6 +22,7 @@ export const SwapBoxInputTitle = styled.div`
   flex-direction: row;
   padding-bottom: 1vw;
   justify-content: space-between;
+  color: white;
 `;
 
 export const SwapBoxInputArea = styled.div`
@@ -31,9 +34,16 @@ export const SwapBoxInputArea = styled.div`
 
 export const Input = styled.input`
   width: 40vw;
-  border-radius: inherit;
-  border: none;
   padding-left: 1vw;
+  border-radius: inherit;
+  border: 1px solid;
+  border-color: gray;
+  color: white;
+  background-color: #747373;
+
+  ::placeholder {
+    color: #c3c3c3;
+  }
 
   ::-webkit-inner-spin-button{
       -webkit-appearance: none; 
@@ -80,6 +90,8 @@ export const BoxInfoSwapWrapper = styled.div`
   padding: 1vw;
   border: 1px solid;
   border-radius: 15px;
+  color: #c3c3c3;
+  border-color: gray
 `;
 
 // Components for index.js (SelectToken)
@@ -95,7 +107,7 @@ export const InputAddress = styled.input`
 
 // Components for TableHeader.js
 export const Warning = styled.div`
-  color: #ff8405;
+  color: #ff0000;
 `
 
 // Components for Position (index.js)
@@ -104,6 +116,7 @@ export const Row = styled.div`
   text-align: left;
   border: 1px solid;
   border-radius: inherit;
+  border-color: gray;
   margin: 1vw 1vw;
   display: flex;
   flex-direction: row;
@@ -134,6 +147,15 @@ export const TableHeader = styled.div`
 `;
 
 export const InputNumber = styled.input`
+  height: 2.7vw;
+  border-radius: 9px;
+  border: 1px solid;
+  border-color: gray;
+  color: white;
+  background-color: #747373;
+  ::placeholder {
+    color: #c3c3c3;
+  }
   ::-webkit-inner-spin-button{
       -webkit-appearance: none; 
       margin: 0; 
@@ -142,4 +164,24 @@ export const InputNumber = styled.input`
       -webkit-appearance: none; 
       margin: 0; 
   }
+`;
+
+export const Text = styled.div`
+  color: #c3c3c3;
+`;
+
+// Component for ModalSlippage
+export const ModalSlippageHeader = styled(Modal.Header)`
+  background-color: rgba(33, 37, 41);
+  color: #c3c3c3;
+`
+
+export const ModalSlippageBody = styled(Modal.Body)`
+  background-color: rgba(70, 74, 78);
+  color: #c3c3c3;
+`;
+
+export const ModalSlippageBodyRow = styled.div`
+  display: flex;
+  flex-direction: column;
 `;

@@ -5,9 +5,11 @@ const Wrapper = styled.div`
   flex-direction: column;
   border: 1px solid;
   ${'' /* width: ${props => (props.style ? props.style : '64vw')}; */}
-  width: 64vw;
-  margin: 10vw auto;
+  width: 53vw;
+  margin: 3vw auto;
   border-radius: 20px;
+  background-color: rgba(33,37,41);
+  border-color: gray;
 `;
 
 export default function BoxWrapper(props) {

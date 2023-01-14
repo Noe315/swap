@@ -6,7 +6,7 @@ import BoxWrapper from '../../components/BoxWrapper'
 import BoxInfo from './components/BoxInfo';
 import { getAccounts, getWeb3, loadSmartContracts } from '../../utils/connectWallet';
 import { Contracts, DECIMAL_PLACES, DEFAULT_SLIPPAGE, NATIVE_TOKEN_ADDRESS, NATIVE_TOKEN_DECIMAL } from '../../constants/address';
-import { TableHeader } from '../../components/styles';
+import { TableHeader, Text } from '../../components/styles';
 import ModalSlippage from '../../components/ModalSlippage';
 
 export default function Liquidity () {
@@ -601,7 +601,7 @@ export default function Liquidity () {
       {/* <TableHeader setSlippage={setSlippage} /> */}
       {/* <TableHeader ref={slippageAndDeadline} /> */}
       <TableHeader>
-        <div>Swap</div>
+        <Text>Add Liquidity</Text>
         <ModalSlippage
           show={isModalSlippage}
           handleClose={() => {
@@ -610,7 +610,7 @@ export default function Liquidity () {
           }}
           ref={slippageAndDeadline}
         />
-        <div
+        <Text
           style={{ marginLeft: 'auto', paddingRight: '1vw' }}
           onClick={() => setIsModalSlippage(true)}
         >
@@ -622,9 +622,9 @@ export default function Liquidity () {
               : DEFAULT_SLIPPAGE
             : DEFAULT_SLIPPAGE
           } %
-        </div>
+        </Text>
       </TableHeader>
-      <Button onClick={
+      {/* <Button onClick={
           () => console.log(
             'slippage: ',
             slippageAndDeadline.current.getSlippage(),
@@ -650,7 +650,7 @@ export default function Liquidity () {
         }
       >
         Test
-      </Button>
+      </Button> */}
 
       <Row>
         <BoxInput
@@ -716,11 +716,11 @@ export default function Liquidity () {
                 : false
             : false
           ) ? (
-                <div>
+                <Text>
                   When creating a pair you are the first liquidity provider.
                   The ratio of tokens you add will set the price of this pool.
                   Once you are happy with the rate, click supply to review
-                </div>
+                </Text>
               )
             : ''
         }
@@ -729,12 +729,14 @@ export default function Liquidity () {
         <Button
           disabled={disableApprove}
           onClick={approveTokens}
+          variant='secondary'
         >
           Approve Tokens
         </Button>
         <Button
           disabled={disableProvide}
           onClick={provide}
+          variant='secondary'
         >
           Provide Liquidity
         </Button>
@@ -746,11 +748,11 @@ export default function Liquidity () {
           : ''}
       </Row>
       <Row>
-        <div>
-          Tip: By adding liquidity you will earn 0.25% of all trades on
+        <Text>
+          Tip: By adding liquidity you will earn 0.3% of all trades on
           this pair proportional to your share of the pool. Fees are added
           to the pool, accrue in real time and can be claimed by withdrawing your liquidity.
-        </div>
+        </Text>
       </Row>
     </BoxWrapper>
   );
