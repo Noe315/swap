@@ -202,7 +202,7 @@ export default function Position () {
           ? <LoadingSpinner />
           : isUserHasLiquidity.current
             ? ''
-            : <div>You have not provided liquidity</div>
+            : <Text style={{color: '#ebe408'}}>You have not provided liquidity</Text>
       }
       {
         positions

@@ -1,4 +1,5 @@
 import { Modal } from 'react-bootstrap';
+import { NavLink } from 'react-router-dom';
 import styled from 'styled-components/macro';
 import './index.css';
 
@@ -97,12 +98,20 @@ export const BoxInfoSwapWrapper = styled.div`
 // Components for index.js (SelectToken)
 export const Invalid = styled.div`
   color: red;
-  padding-bottom: 1vw;
+  ${'' /* padding-bottom: 1vw; */}
 `;
 
 export const InputAddress = styled.input`
-  width: 100%;
   border-radius: 9px;
+  border: 1px solid;
+  border-color: gray;
+  color: white;
+  background-color: #747373;
+  ::placeholder {
+    color: #c3c3c3;
+  }
+
+  width: 100%;
 `;
 
 // Components for TableHeader.js
@@ -184,4 +193,39 @@ export const ModalSlippageBody = styled(Modal.Body)`
 export const ModalSlippageBodyRow = styled.div`
   display: flex;
   flex-direction: column;
+`;
+
+// Components for SelectToken
+export const ModalSelectTokenBody = styled(Modal.Body)`
+  background-color: rgb(110, 114, 118);
+  color: #c3c3c3;
+  border-radius: 0px 0px 10px 10px;
+`;
+
+export const ModalSelectTokenHeader = styled(Modal.Body)`
+  background-color: rgba(33, 37, 41);
+  color: #c3c3c3;
+  border-radius: 10px 10px 0px 0px;
+`;
+
+// Components for ModalRemove
+export const ModalRemoveBody = styled(Modal.Body)`
+  background-color: rgb(45, 47, 48);
+  color: #c3c3c3;
+  ${'' /* border-radius: 0px 0px 10px 10px; */}
+`;
+
+export const ModalRemoveHeader = styled(Modal.Body)`
+  background-color: rgba(33, 37, 41);
+  color: #c3c3c3;
+  border-radius: 10px 10px 0px 0px
+`;
+
+// Components for Header
+export const NavLinkStyled = styled(NavLink)`
+  text-decoration: none;
+  color: #c3c3c3;
+  :hover {
+    color: #fff;
+  }
 `;

@@ -83,7 +83,8 @@ import Modal from 'react-bootstrap/Modal';
 import TokenList from './TokenList';
 import { Contracts, NATIVE_TOKEN_DECIMAL, NATIVE_TOKEN_NAME, NATIVE_TOKEN_SYMBOL } from '../../constants/address';
 import { getWeb3, getWeb3Data } from '../../utils/connectWallet';
-import { InputAddress, Invalid } from '../styles';
+import { InputAddress, Invalid, ModalSelectTokenBody, ModalSelectTokenHeader } from '../styles';
+// import './index.css'
 
 export default function SelectToken (props) {
   const web3 = getWeb3();
@@ -261,18 +262,27 @@ export default function SelectToken (props) {
   };
 
   return (
-    <Modal show={props.show} onHide={props.handleClose}>
-      <Modal.Header closeButton>
-        <Modal.Title>Modal heading</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        <Invalid>{isAddressValid ? '' : 'Invalid ERC-20 Token address, please only use Copy and Paste for addresses.'}</Invalid>
+    <Modal
+      show={props.show}
+      onHide={props.handleClose}
+      contentClassName='modal-content-border'
+    >
+      {/* <Modal.Header closeButton>
+        <Modal.Title>Select A Token From The List</Modal.Title>
+      </Modal.Header> */}
+      {/* <Modal.Body> */}
+      <ModalSelectTokenHeader>
+        <div style={{paddingBottom: '1vw', fontWeight: '600'}}>Select a token from the list below, or input an ERC-20 address</div>
         <InputAddress
           placeholder='Enter Token address'
           onChange={checkAddress}
         />
-      </Modal.Body>
-      <Modal.Body>
+        <Invalid>{isAddressValid ? '' : 'Invalid ERC-20 Token address.'}</Invalid>
+        <Invalid>{isAddressValid ? '' : 'Please only use Copy and Paste for addresses.'}</Invalid>
+      </ModalSelectTokenHeader>
+      {/* </Modal.Body> */}
+      {/* <Modal.Body> */}
+      <ModalSelectTokenBody>
         <TokenList
           tokenAddress={tokenAddress}
           tokenSymbol={tokenSymbol}
@@ -281,7 +291,8 @@ export default function SelectToken (props) {
           setToken={setToken}
           setNativeToken={setNativeToken}
         />
-      </Modal.Body>
+      </ModalSelectTokenBody>
+      {/* </Modal.Body> */}
     </Modal>
   );
 }
