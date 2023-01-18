@@ -5,3 +5,7 @@
 .modal-79percent-width {
   width: 30%;
 }
+
+.modal-content-border {
+  border-radius: 10px;
+}

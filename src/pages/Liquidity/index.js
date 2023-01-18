@@ -610,7 +610,7 @@ export default function Liquidity () {
           }}
           ref={slippageAndDeadline}
         />
-        <Text
+        {/* <Text
           style={{ marginLeft: 'auto', paddingRight: '1vw' }}
           onClick={() => setIsModalSlippage(true)}
         >
@@ -622,7 +622,21 @@ export default function Liquidity () {
               : DEFAULT_SLIPPAGE
             : DEFAULT_SLIPPAGE
           } %
-        </Text>
+        </Text> */}
+        <Button
+          style={{ marginLeft: 'auto' }}
+          onClick={() => setIsModalSlippage(true)}
+          variant='secondary'
+        >
+          Slippage {' '}
+          {
+            slippageAndDeadline.current
+            ? slippageAndDeadline.current.getSlippage()
+              ? Math.round(slippageAndDeadline.current.getSlippage() * 100) / 100
+              : DEFAULT_SLIPPAGE
+            : DEFAULT_SLIPPAGE
+          } %
+        </Button>
       </TableHeader>
       {/* <Button onClick={
           () => console.log(
@@ -725,7 +739,7 @@ export default function Liquidity () {
             : ''
         }
       </Row>
-      <Row>
+      <Row style={{display: 'flex', justifyContent: 'center', gap: '6vw'}}>
         <Button
           disabled={disableApprove}
           onClick={approveTokens}

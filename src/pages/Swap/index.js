@@ -1026,7 +1026,7 @@ export default function Swap () {
           }}
           ref={slippageAndDeadline}
         />
-        <Text
+        {/* <Text
           style={{ marginLeft: 'auto', paddingRight: '1vw' }}
           onClick={() => setIsModalSlippage(true)}
         >
@@ -1038,7 +1038,21 @@ export default function Swap () {
               : DEFAULT_SLIPPAGE
             : DEFAULT_SLIPPAGE
           } %
-        </Text>
+        </Text> */}
+        <Button
+          style={{ marginLeft: 'auto' }}
+          onClick={() => setIsModalSlippage(true)}
+          variant='secondary'
+        >
+          Slippage {' '}
+          {
+            slippageAndDeadline.current
+            ? slippageAndDeadline.current.getSlippage()
+              ? Math.round(slippageAndDeadline.current.getSlippage() * 100) / 100
+              : DEFAULT_SLIPPAGE
+            : DEFAULT_SLIPPAGE
+          } %
+        </Button>
       </TableHeader>
       {/* <Button onClick={() => console.log('pairs: ', pairs.current)}>Pairs</Button>
       <Button onClick={getInfo}>Get info</Button>
@@ -1109,7 +1123,7 @@ export default function Swap () {
                 ) : ''
               }
             </Row>
-            <Row>
+            <Row style={{display: 'flex', justifyContent: 'center', gap: '6vw'}}>
               <Button
                 // disabled={isWrap.current ? true : disableApprove}
                 disabled={isWrap ? true : disableApprove}

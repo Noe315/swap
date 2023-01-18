@@ -2,10 +2,10 @@ import React, { useEffect, useRef, useState } from 'react'
 import Navbar from 'react-bootstrap/Navbar'
 import Container from 'react-bootstrap/Container'
 import Nav from 'react-bootstrap/Nav'
-import { NavLink } from 'react-router-dom';
-import { Button, NavDropdown } from 'react-bootstrap';
+import { Button } from 'react-bootstrap';
 import { connectToMetamask, getAccounts } from '../utils/connectWallet';
 import { shortenAddress } from '../utils/helpers';
+import { NavLinkStyled } from './styles';
 
 export default function Header () {
   const [accountAddress, setAccountAddress] = useState('');
@@ -27,29 +27,23 @@ export default function Header () {
 
   return (
     <Navbar bg="dark" variant="dark">
-      <Container>
-        <Nav className="m-auto">
-          {/* <Nav.Link href="swap">Swap</Nav.Link> */}
-          <Nav.Link>
-            <NavLink to='/swap'>
+      <Container style={{marginLeft: '31vw', marginRight: '7vw'}}>
+        <Nav style={{gap: '3vw'}}>
+          <NavLinkStyled to='/swap'>
+            <Button variant='secondary'>
               Swap
-            </NavLink>
-          </Nav.Link>
-          {/* <Nav.Link href="provide-liquidity">Liquidity</Nav.Link> */}
-          <NavDropdown title="Liquidity">
-            {/* <NavDropdown.Item href="/provide-liquidity">Provide Liquidity</NavDropdown.Item>
-            <NavDropdown.Item href="/view-liquidity">View my Positions</NavDropdown.Item> */}
-            <NavDropdown.Item>
-              <NavLink to='/provide-liquidity'>
-                Provide Liquidity
-              </NavLink>
-            </NavDropdown.Item>
-            <NavDropdown.Item>
-              <NavLink to='/view-liquidity'>
-                View my Positions
-              </NavLink>
-            </NavDropdown.Item>
-          </NavDropdown>
+            </Button>
+          </NavLinkStyled>
+          <NavLinkStyled to='/provide-liquidity'>
+            <Button variant='secondary'>
+              Provide Liquidity
+            </Button>
+          </NavLinkStyled>
+          <NavLinkStyled to='/view-liquidity'>
+            <Button variant='secondary'>
+              View my Positions
+            </Button>
+          </NavLinkStyled>
         </Nav>
         <Button onClick={() => connectToMetamask()}>
           {accountAddress === '' ? 'Connect wallet' : accountAddress}

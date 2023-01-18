@@ -13,6 +13,7 @@ export default function TokenList (props) {
           onClick={
             () => props.setToken(props.tokenAddress, props.tokenName, props.tokenSymbol)
           }
+          variant='dark'
         >
           <div>{props.tokenName}</div>
           <div>{props.tokenAddress}</div>
@@ -37,6 +38,7 @@ export default function TokenList (props) {
                 : props.setToken(token.address, token.name, token.symbol)
             }
             key={token.address}
+            variant='dark'
           >
             <div>{token.name}</div>
             <div>{token.address}</div>

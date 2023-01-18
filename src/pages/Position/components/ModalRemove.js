@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Button } from 'react-bootstrap';
 import Modal from 'react-bootstrap/Modal';
 import ModalSlippage from '../../../components/ModalSlippage';
-import { TableHeader } from '../../../components/styles';
+import { ModalRemoveBody, ModalRemoveHeader } from '../../../components/styles';
 import { Contracts, DEFAULT_SLIPPAGE, NATIVE_TOKEN_ADDRESS } from '../../../constants/address';
 import { getWeb3, getWeb3Data } from '../../../utils/connectWallet';
 import InputRemove from './InputRemove';
@@ -294,28 +294,32 @@ export default function ModalRemove (props) {
       show={props.show}
       // onHide={props.handleClose}
       onHide={onHideModal}
+      contentClassName='modal-content-border'
     >
-      <Modal.Header closeButton>
+      {/* <Modal.Header closeButton> */}
+      <ModalRemoveHeader>
         <Modal.Title>
           <div>Remove Liquidity</div>
           <div>Pool {position ? position.token0Name : ''} - {position ? position.token1Name : ''}</div>
         </Modal.Title>
-      </Modal.Header>
+      </ModalRemoveHeader>
+      {/* </Modal.Header> */}
       
-      <Modal.Body>
+      {/* <Modal.Body> */}
+      <ModalRemoveBody style={{display: 'flex', flexDirection: 'column', gap: '1vw'}}>
         {/* <ModalHeader
           // setSlippage={setSlippage}
           // setSlippage={checkSlippage}
           // ref={slippage}
           ref={slippageAndDeadline}
         /> */}
-        <TableHeader>
+        {/* <TableHeader> */}
           <ModalSlippage
             show={isModalSlippage}
             handleClose={() => setIsModalSlippage(false)}
             ref={slippageAndDeadline}
           />
-          <div
+          {/* <div
             style={{ marginLeft: 'auto', paddingRight: '1vw' }}
             onClick={() => {
               setIsModalSlippage(true);
@@ -330,8 +334,25 @@ export default function ModalRemove (props) {
                 : DEFAULT_SLIPPAGE
               : DEFAULT_SLIPPAGE
             } %
-          </div>
-        </TableHeader>
+          </div> */}
+          <Button
+            style={{ marginLeft: 'auto' }}
+            onClick={() => {
+              setIsModalSlippage(true);
+              resetInput();
+            }}
+            variant='secondary'
+          >
+            Slippage {' '}
+            {
+              slippageAndDeadline.current
+              ? slippageAndDeadline.current.getSlippage()
+                ? Math.round(slippageAndDeadline.current.getSlippage() * 100) / 100
+                : DEFAULT_SLIPPAGE
+              : DEFAULT_SLIPPAGE
+            } %
+          </Button>
+        {/* </TableHeader> */}
         <InputRemove
           ref={inputRef}
           position={position}
@@ -339,34 +360,45 @@ export default function ModalRemove (props) {
           setDisableApprove={setDisableApprove}
           setDisableConfirm={setDisableConfirm}
         />
-      </Modal.Body>
+      </ModalRemoveBody>
+      {/* </Modal.Body> */}
 
-      <Modal.Body>
-        <div>Total receive</div>
-        <div>
-          {outputTokenAmounts ? outputTokenAmounts.outputToken0AmountWithoutDecimal : 0} {' '}
-          {position ? position.token0Name : ''}
-        </div>
-        <div>
-          {outputTokenAmounts ? outputTokenAmounts.outputToken1AmountWithoutDecimal : 0} {' '}
-          {position ? position.token1Name : ''}
-        </div>
-      </Modal.Body>
+      {/* <Modal.Body> */}
+      <ModalRemoveBody>
+        {/* <div style={{marginLeft: 'auto'}}> */}
+          <div>Total receive</div>
+          <div>
+            {outputTokenAmounts ? outputTokenAmounts.outputToken0AmountWithoutDecimal : 0} {' '}
+            {position ? position.token0Name : ''}
+          </div>
+          <div>
+            {outputTokenAmounts ? outputTokenAmounts.outputToken1AmountWithoutDecimal : 0} {' '}
+            {position ? position.token1Name : ''}
+          </div>
+        {/* </div> */}
+      </ModalRemoveBody>
+      {/* </Modal.Body> */}
       
-      <Modal.Body>
-        <Button
-          onClick={approve}
-          disabled={disableApprove}
-        >
-          Approve
-        </Button>
-        <Button
-          onClick={remove}
-          disabled={disableConfirm}
-        >
-          Confirm
-        </Button>
-      </Modal.Body>
+      {/* <Modal.Body> */}
+      <ModalRemoveBody style={{borderRadius: '0px 0px 10px 10px'}}>
+        <div style={{display: 'flex', justifyContent: 'center', gap: '4vw'}}>
+          <Button
+            onClick={approve}
+            disabled={disableApprove}
+            variant='secondary'
+          >
+            Approve
+          </Button>
+          <Button
+            onClick={remove}
+            disabled={disableConfirm}
+            variant='secondary'
+          >
+            Confirm
+          </Button>
+        </div>
+      </ModalRemoveBody>
+      {/* </Modal.Body> */}
     </Modal>
   );
 }

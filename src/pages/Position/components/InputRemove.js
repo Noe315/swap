@@ -178,16 +178,13 @@ const InputRemove = forwardRef((props, _ref) => {
   };
 
   return (
-    <>
-      <div>Percent to remove (whole number from 1 to 100)</div>
       <RemoveInput
         type='number'
-        placeholder='0'
+        placeholder='Percent to remove (whole number from 1 to 100)'
         value={inputValue}
         onChange={checkInput}
         onKeyDown={blockInvalidChar}
       />
-    </>
   );
 });
 
